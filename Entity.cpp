@@ -5,7 +5,6 @@
 #include <SDL_mixer.h>
 #include <sstream>
 
-#include "RenderWindow.h"
 #include "Entity.h"
 using namespace std;
 

@@ -5,10 +5,10 @@
 #include <SDL_mixer.h>
 #include <sstream>
 
-#include "RenderWindow.h"
 #include "Entity.h"
 #include "Player.h"
 
+Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_tex) {}
 
 void Player::handleInput(SDL_Event &events) {
 	if (events.type == SDL_KEYDOWN && events.key.repeat == 0) {
@@ -77,7 +77,7 @@ void Player::update() {
 
 bool Player::jump() {
 	if (grounded) {
-		yVel -= 5;
+		yVel -= 7;
 		grounded = false;
 		return true;
 	}
@@ -85,7 +85,7 @@ bool Player::jump() {
 }
 
 
-void Player::handleCamera() {
+void Player::handleCamera(SDL_Rect& camera) {
 	//Di chuyển camera theo nhân vật
 	camera.x = (getX() + getCurrentFrame().w / 2) - SCREEN_WIDTH / 2;
 	camera.y = (getY() + getCurrentFrame().h / 2) - SCREEN_HEIGHT / 2;
@@ -105,6 +105,6 @@ void Player::handleCamera() {
 	}
 }
 
-SDL_Rect Player::getCamera() {
-	return camera;
-}
+//void Player::render(SDL_Rect& camera) {
+//	commonFunc::renderTexture();
+//}

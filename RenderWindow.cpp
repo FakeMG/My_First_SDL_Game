@@ -32,13 +32,21 @@ SDL_Texture* RenderWindow::loadTexture(const char* p_filePath) {
 
 //Copy texture vào renderer và render
 void RenderWindow::renderTexture(Entity& entity, SDL_Rect* rec, double angle, SDL_Point* center, SDL_RendererFlip flip) {
-	SDL_Rect dst = { entity.getX(), entity.getY(), entity.getCurrentFrame().w, entity.getCurrentFrame().h };
+	float cameraX = 0, cameraY = 0;
+	//mặc định là in toàn bộ texture ra
+	SDL_Rect dst = { entity.getX() - cameraX, entity.getY() - cameraY, entity.getCurrentFrame().w, entity.getCurrentFrame().h };
+	
+	//nếu đầu vào rec != NULL thì in ra theo rec
 	if (rec != NULL) {
 		dst.w = rec->w;
 		dst.h = rec->h;
 	}
 	SDL_RenderCopyEx(renderer, entity.getTex(), rec, &dst, angle, center, flip);
-	
+}
+
+void RenderWindow::renderTile(Entity& entity, SDL_Rect& rec, SDL_Rect& camera) {
+	SDL_Rect dst = { entity.getX() - camera.x, entity.getY() - camera.y, rec.w, rec.h };
+	SDL_RenderCopy(renderer, entity.getTex(), &rec, &dst);
 }
 
 void RenderWindow::renderAnimation(SDL_Texture* p_tex, int p_w, int p_h, float p_x, float p_y) {
@@ -47,11 +55,10 @@ void RenderWindow::renderAnimation(SDL_Texture* p_tex, int p_w, int p_h, float p
 	SDL_RenderCopy(renderer, p_tex, &src, &dst);
 }
 
-void RenderWindow::renderPlayer(Entity& player, float p_CamX, float p_CamY) {
+void RenderWindow::renderPlayer(Entity& player, SDL_Rect& camera) {
 	SDL_Rect src = { player.getCurrentFrame().x, player.getCurrentFrame().y, player.getCurrentFrame().w, player.getCurrentFrame().h };
-	SDL_Rect dst = { player.getX() - p_CamX, player.getY() - p_CamY, player.getCurrentFrame().w, player.getCurrentFrame().h };
+	SDL_Rect dst = { player.getX() - camera.x, player.getY() - camera.y, player.getCurrentFrame().w, player.getCurrentFrame().h };
 	SDL_RenderCopy(renderer, player.getTex(), &src, &dst);
-	
 }
 
 //Load font
@@ -77,6 +84,7 @@ SDL_Texture* RenderWindow::createText(string p_text, SDL_Color p_textColor) {
 		SDL_FreeSurface(textSurface);
 		return texture;
 	}
+	return NULL;
 }
 
 //Tô màu

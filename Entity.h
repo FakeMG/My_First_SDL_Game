@@ -6,7 +6,6 @@
 #include <SDL_mixer.h>
 #include <sstream>
 
-#include "RenderWindow.h"
 using namespace std;
 
 class Entity {
