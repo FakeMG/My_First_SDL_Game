@@ -13,38 +13,45 @@
 #include "Tile.h"
 using namespace std;
 
-RenderWindow window("Test Game", SCREEN_WIDTH, SCREEN_HEIGHT);
+RenderWindow window;
 
-SDL_Texture* bgTex = window.loadTexture("res/gtx/Doge.jpg");
-SDL_Texture* FakeMG = window.loadTexture("res/gtx/foo.png");
-SDL_Texture* TileTex = window.loadTexture("res/gtx/tiles.png");
+SDL_Texture* bgTex = NULL;
+SDL_Texture* FakeMG = NULL;
+SDL_Texture* TileTex = NULL;
 
-SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
-
-Tile* tileSet[TOTAL_TILES];
+SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
 //FPScounter
 LTimer fpsTimer;
-LTimer capTimer;
 stringstream timeText;
 int countedFrames = 0;
-void FPSCounter() {
-    float avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
-    if (avgFPS > 2000000) {
-        avgFPS = 0;
-    }
-    timeText.str("");
-    timeText << "FPS: " << avgFPS;
 
-    SDL_Color textColor = { 0,0,0,255 };
-    SDL_Texture* textTex = window.createText(timeText.str().c_str(), textColor);
-    Entity text(0, 0, textTex);
-    window.renderTexture(text);
-    ++countedFrames;
+SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
+Tile* tileSet[TOTAL_TILES];
+
+bool init_load();
+//bool load = init_load();
+Player knight(0, 0, FakeMG);
+Entity bg(0, 0, bgTex);
+void FPSCounter();
+bool setTiles(Tile* tiles[]);
+void gameloop();
+
+int main(int argc, char* argv[]) {
+    init_load();
+
+    if (!setTiles(tileSet)) {
+        printf("Failed to load tile set!\n");
+    }
+
+    gameloop();
+
+    //Giải phóng bộ nhớ
+    window.cleanUp();
+    return 0;
 }
 
-//Khởi tạo SDL
-bool init() {
+bool init_load() {
     bool success = true;
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         cout << "SDL_Init HAS FAILED. SDL_ERROR: " << SDL_GetError() << endl;
@@ -62,9 +69,30 @@ bool init() {
         cout << "TTF_Init HAS FAILED. SDL_ERROR: " << TTF_GetError() << endl;
         success = false;
     }
+
+    window.create("Test Game", SCREEN_WIDTH, SCREEN_HEIGHT);
+    window.loadFont("res/lazy.ttf");
+
+    bgTex = window.loadTexture("res/gtx/Doge.jpg");
+    FakeMG = window.loadTexture("res/gtx/foo.png");
+    TileTex = window.loadTexture("res/gtx/tiles.png");
+
     return success;
 }
+void FPSCounter() {
+    float avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
+    if (avgFPS > 2000000) {
+        avgFPS = 0;
+    }
+    timeText.str("");
+    timeText << "FPS: " << avgFPS;
 
+    SDL_Color textColor = { 0,0,0,255 };
+    SDL_Texture* textTex = window.createText(timeText.str().c_str(), textColor);
+    Entity text(0, 0, textTex);
+    window.renderTexture(text);
+    ++countedFrames;
+}
 bool setTiles(Tile* tiles[]) {
     //Success flag
     bool tilesLoaded = true;
@@ -193,28 +221,8 @@ bool setTiles(Tile* tiles[]) {
     //If the map was loaded fine
     return tilesLoaded;
 }
-
-int main(int argc, char* argv[]) {
-    
-    window.loadFont("res/lazy.ttf");
-
-    if ( !init() ) {
-        printf("Failed to initialize!\n");
-        return 0;
-    }
-
-    if (!setTiles(tileSet)) {
-        printf("Failed to load tile set!\n");
-    }
-
-    Player knight(0, 0, FakeMG);
-    Entity bg(0, 0, bgTex);
- 
-    fpsTimer.start();
-
-    SDL_Rect camera = { (float)0, (float)0, SCREEN_WIDTH, SCREEN_HEIGHT };
-    
-    //Game loop
+void gameloop() {
+    fpsTimer.start(); //bắt đầu đếm time
     bool gameRunning = true;
     SDL_Event event;
     while (gameRunning) {
@@ -229,16 +237,9 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < TOTAL_TILES; i++) {
             window.renderTile(*tileSet[i], gTileClips[tileSet[i]->getType()], camera);
         }
-            
-       
-        window.renderTexture(bg, &camera);
+        //window.renderTexture(bg, &camera);
         window.renderPlayer(knight, camera);
         FPSCounter();
         window.renderPresent();
     }
-
-    //Giải phóng bộ nhớ
-    window.cleanUp();
-    return 0;
 }
-

@@ -9,7 +9,7 @@
 #include "Entity.h"
 using namespace std;
 
-RenderWindow::RenderWindow(const char* p_title, int p_width, int p_height) {
+void RenderWindow::create(const char* p_title, int p_width, int p_height) {
 	//Khởi tạo cửa sổ
 	window = SDL_CreateWindow(p_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, p_width, p_height, SDL_WINDOW_SHOWN);
 	if (window == NULL) {

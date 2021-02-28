@@ -47,8 +47,9 @@ private:
 	SDL_Renderer* renderer = NULL;
 	SDL_Surface* surface = NULL;
 public:
+	RenderWindow() {}
 	//Window
-	RenderWindow(const char* p_title, int p_width, int p_height);
+	void create(const char* p_title, int p_width, int p_height);
 
 	//Texture
 	SDL_Texture* loadTexture(const char* p_filePath);
