@@ -14,6 +14,7 @@ class Tile;
 using namespace std;
 
 const float GRAVITY = 0.25;
+const float MAX_GRAVITY = 15;
 
 //screen
 const int SCREEN_WIDTH = 1280;

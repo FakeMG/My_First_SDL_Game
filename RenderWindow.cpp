@@ -54,7 +54,7 @@ void commonFunc::renderTile(Entity& entity, SDL_Rect& rec, SDL_Rect& camera) {
 
 void commonFunc::renderAnimation(SDL_Texture* p_tex, float p_x, float p_y, SDL_Rect &p_clip, SDL_Rect &p_camera, double p_angle, SDL_Point* p_center, SDL_RendererFlip p_flip) {
 	SDL_Rect src = { p_clip.x, p_clip.y, p_clip.w, p_clip.h };
-	SDL_Rect dst = { p_x - p_camera.x, p_y - p_camera.y, p_clip.w, p_clip.h };
+	SDL_Rect dst = { p_x - p_camera.x, p_y - p_camera.y, p_clip.w, p_clip.h};
 	SDL_RenderCopyEx(renderer, p_tex, &p_clip, &dst, p_angle, p_center, p_flip);
 }
 

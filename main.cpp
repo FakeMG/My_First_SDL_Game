@@ -51,7 +51,6 @@ int main(int argc, char* argv[]) {
             //Game loop
             fpsTimer.start(); //bắt đầu đếm time
             
-            int frame = 0;
             while (gameRunning) {
                 while (SDL_PollEvent(&event)) {
                     if (event.type == SDL_QUIT) gameRunning = false;
@@ -75,7 +74,7 @@ int main(int argc, char* argv[]) {
                     }
                 }
 
-                knight.render(camera, frame);
+                knight.render(camera);
                 FPSCounter();
                 commonFunc::renderPresent();
             }
@@ -115,7 +114,7 @@ bool loadMedia() {
     if (!commonFunc::loadFont("res/lazy.ttf")) success = false;
     bgTex = commonFunc::loadTexture("res/gtx/Doge.jpg");
     if (bgTex == NULL) success = false;
-    FakeMG = commonFunc::loadTexture("res/gtx/foo.png");
+    FakeMG = commonFunc::loadTexture("res/gtx/Metal knight.png");
     if (FakeMG == NULL) success = false;
     tileTex = commonFunc::loadTexture("res/gtx/tiles.png");
     if (tileTex == NULL) success = false;

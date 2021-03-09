@@ -9,14 +9,26 @@
 #include "Player.h"
 
 Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_tex) {
-	collision.w = getCurrentFrame().w;
-	collision.h = getCurrentFrame().h;
+	collision.x = getX() + PLAYER_WIDTH;
+	collision.y = getY() + PLAYER_HEIGHT;
+	collision.w = PLAYER_WIDTH - 12;
+	collision.h = PLAYER_HEIGHT;
 
-	for (int i = 0; i < 4; i++) {
-		walkingClips[i].x = i * 64;
-		walkingClips[i].y = 0;
-		walkingClips[i].w = 64;
-		walkingClips[i].h = 205;
+	for (int i = 0; i < WALKING_ANIMATION_FRAMES; i++) {
+		walkingClips[i].x = i * (getCurrentFrame().w/4);
+		if (i >= 4) {
+			walkingClips[i].x = (i-4) * (getCurrentFrame().w/4);
+			walkingClips[i].y = (getCurrentFrame().h/5)*2;
+		}
+		else walkingClips[i].y = getCurrentFrame().h/5;
+		walkingClips[i].w = getCurrentFrame().w/4;
+		walkingClips[i].h = getCurrentFrame().h/5;
+	}
+	for (int i = 0; i < IDLING_ANIMATION_FRAMES; i++) {
+		idlingClips[i].x = i * (getCurrentFrame().w/4);
+		idlingClips[i].y = 0;
+		idlingClips[i].w = getCurrentFrame().w/4;
+		idlingClips[i].h = getCurrentFrame().h/5;
 	}
 }
 
@@ -31,13 +43,13 @@ void Player::handleInput(SDL_Event &events) {
 			break;
 		case SDLK_a:
 			xVel -= PLAYER_VEL;
-			flipType = SDL_FLIP_NONE;
+			flipType = SDL_FLIP_HORIZONTAL;
 			running = true;
 			idling = false;
-			break;
+				break;
 		case SDLK_d:
 			xVel += PLAYER_VEL;
-			flipType = SDL_FLIP_HORIZONTAL;
+			flipType = SDL_FLIP_NONE;
 			running = true;
 			idling = false;
 			break;
@@ -74,11 +86,11 @@ void Player::handleInput(SDL_Event &events) {
 		}
 	}
 	else if (events.type == SDL_MOUSEBUTTONDOWN && events.key.repeat == 0) {
-		Bullet* bullet = new Bullet(getX() + walkingClips->w, getY() + walkingClips->h/2, NULL);
+		Bullet* bullet = new Bullet(getCollision().x + PLAYER_WIDTH*1.25, getCollision().y, NULL);
 		if (events.button.button == SDL_BUTTON_LEFT) {
-			bullet->setWidthHeight(DEFAULTBULLET_W, DEFAULTBULLET_H);
-			bullet->setType(Bullet::NORMAL);
 			bullet->setFlipType(getFlipType());
+			bullet->setSize_Position(DEFAULTBULLET_W, DEFAULTBULLET_H, getX());
+			bullet->setType(Bullet::NORMAL);
 		}
 		bullet->setMove(true);
 		bulletList.push_back(bullet);
@@ -93,42 +105,42 @@ void Player::update(Tile* tile[]) {
 
 	//move x
 	x += xVel;
-	collision.x = x;
+	collision.x = getX() + PLAYER_WIDTH;
 
-	if (x < 0) {
-		x = 0;
+	if (getX() + PLAYER_WIDTH < 0) {
+		x = -PLAYER_WIDTH;
+		collision.x = getX() + PLAYER_WIDTH;
+	}
+	if (getX() + 2*PLAYER_HEIGHT > LEVEL_WIDTH) {
+		x = LEVEL_WIDTH - 2*PLAYER_HEIGHT;
 		collision.x = x;
 	}
-	if (x > LEVEL_WIDTH - currentFrame.w) {
-		x = LEVEL_WIDTH - currentFrame.w;
-		collision.x = x;
-	}
-	/*if (commonFunc::touchesWall(collision, tile, stt)) {
+	if (commonFunc::touchesWall(collision, tile, stt)) {
 		x -= xVel;
-		collision.x = x;
-	}*/
+		collision.x = getX() + PLAYER_WIDTH;
+	}
 
 	//move y
 	y += yVel;
-	collision.y = y;
+	collision.y = getY() + PLAYER_HEIGHT;
 
-	if (y < 0) {
-		y = 0;
-		collision.y = y;
+	if (getY() + PLAYER_HEIGHT < 0) {
+		y = -PLAYER_HEIGHT;
+		collision.y = getY() + PLAYER_HEIGHT;
 	}
-	if (y > LEVEL_HEIGHT - currentFrame.h) {
-		y = LEVEL_HEIGHT - currentFrame.h;
-		collision.y = y;
+	if (getY() + 2*PLAYER_HEIGHT > LEVEL_HEIGHT) {
+		y = LEVEL_HEIGHT - 2 * PLAYER_HEIGHT;
+		collision.y = getY() + PLAYER_HEIGHT;
 	}
-	/*if (commonFunc::touchesWall(collision, tile, stt)) {
+	if (commonFunc::touchesWall(collision, tile, stt)) {
 		y -= yVel;
-		collision.y = y;
-	}*/
+		collision.y = getY() + PLAYER_HEIGHT;
+	}
 
 	//Gravity
 	if (!grounded) {
 		yVel += GRAVITY;
-		if (yVel > 40) yVel = 40;
+		if (yVel > MAX_GRAVITY) yVel = MAX_GRAVITY;
 	}
 	/*else if( stand on ground() ) {
 		grounded = true;
@@ -148,8 +160,8 @@ bool Player::jump() {
 
 void Player::handleCamera(SDL_Rect& camera) {
 	//Di chuyển camera theo nhân vật
-	camera.x = (getX() + getCurrentFrame().w / 2) - SCREEN_WIDTH / 2;
-	camera.y = (getY() + getCurrentFrame().h / 2) - SCREEN_HEIGHT / 2;
+	camera.x = (getX() + PLAYER_WIDTH / 2) - SCREEN_WIDTH / 2;
+	camera.y = (getY() + PLAYER_HEIGHT / 2) - SCREEN_HEIGHT / 2;
 
 	//Giới hạn 
 	if (camera.x < 0) {
@@ -166,14 +178,16 @@ void Player::handleCamera(SDL_Rect& camera) {
 	}
 }
 
-void Player::render(SDL_Rect &p_camera, int &frame) {
+void Player::render(SDL_Rect &p_camera) {
 	if (running) {
-		commonFunc::renderAnimation(tex, x, y, walkingClips[frame/4], p_camera, 0, NULL, flipType);
-		frame++;
-		if (frame/4 >= WALKING_ANIMATION_FRAMES) frame = 0;
+		commonFunc::renderAnimation(tex, x, y, walkingClips[walkCounter / 4], p_camera, 0, NULL, getFlipType());
+		walkCounter++;
+		if (walkCounter/4 >= WALKING_ANIMATION_FRAMES) walkCounter = 0;
 	}
 
 	if (idling) {
-		commonFunc::renderAnimation(tex, x, y, walkingClips[0], p_camera, 0, NULL, flipType);
+		commonFunc::renderAnimation(tex, x, y, idlingClips[idleCounter/6], p_camera, 0, NULL, getFlipType());
+		idleCounter++;
+		if (idleCounter / 6 >= IDLING_ANIMATION_FRAMES) idleCounter = 0;
 	}
 }

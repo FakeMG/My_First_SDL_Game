@@ -11,16 +11,20 @@
 
 using namespace std;
 
-const int DEFAULTBULLET_W = 64*5;
+const int DEFAULTBULLET_W = 64;
 const int DEFAULTBULLET_H = 64;
 
-const int BULLETSPEED = 5;
+const int BULLETSPEED = 15;
 
 class Bullet : public Entity {
 private:
-	bool moving;
+	bool moving = false;
 	int bulletType;
 	SDL_Rect collision;
+
+	static const int BULLET_ANIMATION_FRAMES = 4;
+	SDL_Rect bulletClips[BULLET_ANIMATION_FRAMES];
+	int bulletCounter = 0;
 public:
 	enum bulletType {
 		NONE = 0,
@@ -40,6 +44,6 @@ public:
 	void setFlipType(SDL_RendererFlip p_PlayerflipType);
 	void setType(const int& p_type) { bulletType = p_type; }
 	void setMove(bool p_move) { moving = p_move; }
-	void setWidthHeight(const int &p_width, const int &p_height);
+	void setSize_Position(const int &p_width, const int &p_height, const int &p_playerX);
 };
 
