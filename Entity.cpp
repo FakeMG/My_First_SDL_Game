@@ -31,3 +31,7 @@ SDL_Texture* Entity::getTex() {
 SDL_Rect Entity::getCurrentFrame() {
 	return currentFrame;
 }
+
+SDL_RendererFlip Entity::getFlipType() {
+	return flipType;
+}

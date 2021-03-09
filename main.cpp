@@ -13,11 +13,12 @@
 #include "Tile.h"
 using namespace std;
 
-RenderWindow window;
+SDL_Event event;
 
 SDL_Texture* bgTex = NULL;
 SDL_Texture* FakeMG = NULL;
-SDL_Texture* TileTex = NULL;
+SDL_Texture* tileTex = NULL;
+SDL_Texture* bulletTex = NULL;
 
 SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
@@ -29,29 +30,64 @@ int countedFrames = 0;
 SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
 Tile* tileSet[TOTAL_TILES];
 
-bool init_load();
-//bool load = init_load();
-Player knight(0, 0, FakeMG);
-Entity bg(0, 0, bgTex);
+bool gameRunning = true;
+
+bool init();
+bool loadMedia();
 void FPSCounter();
 bool setTiles(Tile* tiles[]);
-void gameloop();
 
 int main(int argc, char* argv[]) {
-    init_load();
+    if (!init()) return 0;
+    else {
+        if (!loadMedia()) return 0;
+        else {
+            Player knight(0, 0, FakeMG);
+            Entity bg(0, 0, bgTex);
+            if (!setTiles(tileSet)) {
+                printf("Failed to load tile set!\n");
+            }
+            
+            //Game loop
+            fpsTimer.start(); //bắt đầu đếm time
+            
+            int frame = 0;
+            while (gameRunning) {
+                while (SDL_PollEvent(&event)) {
+                    if (event.type == SDL_QUIT) gameRunning = false;
+                    knight.handleInput(event);
+                }
+                knight.update(tileSet);
+                knight.handleCamera(camera);
 
-    if (!setTiles(tileSet)) {
-        printf("Failed to load tile set!\n");
+                commonFunc::clearRenderer();
+                for (int i = 0; i < TOTAL_TILES; i++) {
+                    commonFunc::renderTile(*tileSet[i], gTileClips[tileSet[i]->getType()], camera);
+                }
+
+                for (int i = 0; i < knight.getBulletList().size(); i++) {
+                    if (knight.getBulletList().at(i) != NULL) {
+                        if (knight.getBulletList().at(i)->isMoving()) {
+                            knight.getBulletList().at(i)->render(camera, bulletTex);
+                            knight.getBulletList().at(i)->move();
+                        }
+                        else knight.getBulletList().erase(knight.getBulletList().begin() + i);
+                    }
+                }
+
+                knight.render(camera, frame);
+                FPSCounter();
+                commonFunc::renderPresent();
+            }
+        }
     }
 
-    gameloop();
-
     //Giải phóng bộ nhớ
-    window.cleanUp();
+    commonFunc::cleanUp();
     return 0;
 }
 
-bool init_load() {
+bool init() {
     bool success = true;
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         cout << "SDL_Init HAS FAILED. SDL_ERROR: " << SDL_GetError() << endl;
@@ -70,13 +106,20 @@ bool init_load() {
         success = false;
     }
 
-    window.create("Test Game", SCREEN_WIDTH, SCREEN_HEIGHT);
-    window.loadFont("res/lazy.ttf");
+    if (success == true) commonFunc::renderWindow("Test Game", SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    bgTex = window.loadTexture("res/gtx/Doge.jpg");
-    FakeMG = window.loadTexture("res/gtx/foo.png");
-    TileTex = window.loadTexture("res/gtx/tiles.png");
-
+    return success;
+}
+bool loadMedia() {
+    bool success = true;
+    if (!commonFunc::loadFont("res/lazy.ttf")) success = false;
+    bgTex = commonFunc::loadTexture("res/gtx/Doge.jpg");
+    if (bgTex == NULL) success = false;
+    FakeMG = commonFunc::loadTexture("res/gtx/foo.png");
+    if (FakeMG == NULL) success = false;
+    tileTex = commonFunc::loadTexture("res/gtx/tiles.png");
+    if (tileTex == NULL) success = false;
+    bulletTex = commonFunc::loadTexture("res/gtx/Bullet.png");
     return success;
 }
 void FPSCounter() {
@@ -88,9 +131,9 @@ void FPSCounter() {
     timeText << "FPS: " << avgFPS;
 
     SDL_Color textColor = { 0,0,0,255 };
-    SDL_Texture* textTex = window.createText(timeText.str().c_str(), textColor);
+    SDL_Texture* textTex = commonFunc::createText(timeText.str().c_str(), textColor);
     Entity text(0, 0, textTex);
-    window.renderTexture(text);
+    commonFunc::renderTexture(text);
     ++countedFrames;
 }
 bool setTiles(Tile* tiles[]) {
@@ -100,53 +143,50 @@ bool setTiles(Tile* tiles[]) {
     //The tile offsets
     int x = 0, y = 0;
 
-    //Open the map
+    //Mở map
     ifstream map("res/gtx/lazy.map");
 
-    //If the map couldn't be loaded
+    //Nếu ko đọc đc dữ liệu trong map
     if (map.fail()) {
         printf("Unable to load map file!\n");
         tilesLoaded = false;
     }
     else
     {
-        //Initialize the tiles
+        //Tạo các tile
         for (int i = 0; i < TOTAL_TILES; ++i) {
-            //Determines what kind of tile will be made
+            //Chọn loại cho tile
             int tileType = -1;
 
-            //Read tile from map file
+            //Đọc tu map
             map >> tileType;
 
-            //If the was a problem in reading the map
+            //Debug
             if (map.fail()) {
-                //Stop loading map
                 printf("Error loading map: Unexpected end of file!\n");
                 tilesLoaded = false;
                 break;
             }
 
-            //If the number is a valid tile number
+            //Nếu như đọc đc tileType và thỏa mãn
             if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
-                tiles[i] = new Tile(x, y, TileTex, tileType);
+                tiles[i] = new Tile(x, y, tileTex, tileType);
             }
-            //If we don't recognize the tile type
+            //Nếu như tileType ko thoả mãn
             else
             {
-                //Stop loading map
+                //Dừng load
                 printf("Error loading map: Invalid tile type at %d!\n", i);
                 tilesLoaded = false;
                 break;
             }
-            //Move to next tile spot
+            //Dịch x của tile tiếp theo
             x += TILE_WIDTH;
 
-            //If we've gone too far
+            //Nếu như đến giới hạn level
             if (x >= LEVEL_WIDTH) {
-                //Move back
+                //Xuống dòng mới và làm lại
                 x = 0;
-
-                //Move to the next row
                 y += TILE_HEIGHT;
             }
         }
@@ -220,26 +260,4 @@ bool setTiles(Tile* tiles[]) {
 
     //If the map was loaded fine
     return tilesLoaded;
-}
-void gameloop() {
-    fpsTimer.start(); //bắt đầu đếm time
-    bool gameRunning = true;
-    SDL_Event event;
-    while (gameRunning) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) gameRunning = false;
-            knight.handleInput(event);
-        }
-        knight.update();
-        knight.handleCamera(camera);
-
-        window.clearRenderer();
-        for (int i = 0; i < TOTAL_TILES; i++) {
-            window.renderTile(*tileSet[i], gTileClips[tileSet[i]->getType()], camera);
-        }
-        //window.renderTexture(bg, &camera);
-        window.renderPlayer(knight, camera);
-        FPSCounter();
-        window.renderPresent();
-    }
 }

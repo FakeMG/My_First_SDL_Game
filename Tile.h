@@ -1,4 +1,5 @@
 #pragma once
+
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -8,6 +9,7 @@
 
 #include "RenderWindow.h"
 #include "Entity.h"
+
 using namespace std;
 
 class Tile : public Entity {

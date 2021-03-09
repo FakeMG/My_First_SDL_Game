@@ -1,4 +1,5 @@
 #pragma once
+
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -7,7 +8,10 @@
 #include <sstream>
 
 #include "Entity.h"
+#include "Tile.h"
+class Tile;
 
+using namespace std;
 
 const float GRAVITY = 0.25;
 
@@ -38,35 +42,35 @@ const int TILE_BOTTOMLEFT = 9;
 const int TILE_LEFT = 10;
 const int TILE_TOPLEFT = 11;
 
+static TTF_Font* font = NULL;
+static SDL_Window* window = NULL;
+static SDL_Renderer* renderer = NULL;
+static SDL_Surface* surface = NULL;
 
 
-class RenderWindow {
-private:
-	TTF_Font* font = NULL;
-	SDL_Window* window = NULL;
-	SDL_Renderer* renderer = NULL;
-	SDL_Surface* surface = NULL;
-public:
-	RenderWindow() {}
+
+namespace commonFunc {
 	//Window
-	void create(const char* p_title, int p_width, int p_height);
+	void renderWindow(const char* p_title, int p_width, int p_height);
 
 	//Texture
 	SDL_Texture* loadTexture(const char* p_filePath);
-	void renderTexture(Entity& entity, SDL_Rect* rec = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
+	void renderTexture(Entity& entity, SDL_Rect *rec = NULL, SDL_Rect *camera = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
 	void renderTile(Entity& entity, SDL_Rect& rec, SDL_Rect& camera);
-	void renderAnimation(SDL_Texture* p_tex, int p_w, int p_h, float p_x, float p_y);
-	void renderPlayer(Entity& player, SDL_Rect& camera);
+	void renderPlayer(Entity& entity, SDL_Rect& camera);
+	void renderAnimation(SDL_Texture* p_tex, float p_x, float p_y, SDL_Rect& p_clip, SDL_Rect& p_camera, double p_angle = 0.0, SDL_Point* p_center = NULL, SDL_RendererFlip p_flip = SDL_FLIP_NONE);
+
+	bool checkCollision(SDL_Rect a, SDL_Rect b);
+	bool touchesWall(SDL_Rect box, Tile* tiles[], int &stt);
 
 	//Font
-	void loadFont(const char* filePath);
+	bool loadFont(const char* filePath);
 	SDL_Texture* createText(string p_text, SDL_Color p_textColor);
 
 	void Color();
 	void clearRenderer();
 	void renderPresent();
 	void cleanUp();
-};
+}
 
-	
 

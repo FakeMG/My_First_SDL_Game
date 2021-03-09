@@ -8,19 +8,38 @@
 #include "Entity.h"
 #include "Player.h"
 
-Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_tex) {}
+Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_tex) {
+	collision.w = getCurrentFrame().w;
+	collision.h = getCurrentFrame().h;
+
+	for (int i = 0; i < 4; i++) {
+		walkingClips[i].x = i * 64;
+		walkingClips[i].y = 0;
+		walkingClips[i].w = 64;
+		walkingClips[i].h = 205;
+	}
+}
 
 void Player::handleInput(SDL_Event &events) {
 	if (events.type == SDL_KEYDOWN && events.key.repeat == 0) {
 		switch (events.key.keysym.sym) {
+		case SDLK_w:
+			yVel -= PLAYER_VEL;
+			break;
 		case SDLK_s:
 			yVel += PLAYER_VEL;
 			break;
 		case SDLK_a:
 			xVel -= PLAYER_VEL;
+			flipType = SDL_FLIP_NONE;
+			running = true;
+			idling = false;
 			break;
-		case SDLK_d:		
+		case SDLK_d:
 			xVel += PLAYER_VEL;
+			flipType = SDL_FLIP_HORIZONTAL;
+			running = true;
+			idling = false;
 			break;
 		case SDLK_SPACE:
 			if (grounded) {
@@ -28,46 +47,88 @@ void Player::handleInput(SDL_Event &events) {
 			}
 			break;
 		default:
+			idling = true;
 			break;
 		}
 	}
 	else if (events.type == SDL_KEYUP && events.key.repeat == 0) {
 		switch (events.key.keysym.sym) {
+		case SDLK_w:
+			yVel += PLAYER_VEL;
+			break;
 		case SDLK_s:
 			yVel -= PLAYER_VEL;
 			break;
 		case SDLK_a:
 			xVel += PLAYER_VEL;
+			running = false;
+			idling = true;
 			break;
 		case SDLK_d:
 			xVel -= PLAYER_VEL;
+			running = false;
+			idling = true;
 			break;
 		default:
 			break;
 		}
 	}
 	else if (events.type == SDL_MOUSEBUTTONDOWN && events.key.repeat == 0) {
-
+		Bullet* bullet = new Bullet(getX() + walkingClips->w, getY() + walkingClips->h/2, NULL);
+		if (events.button.button == SDL_BUTTON_LEFT) {
+			bullet->setWidthHeight(DEFAULTBULLET_W, DEFAULTBULLET_H);
+			bullet->setType(Bullet::NORMAL);
+			bullet->setFlipType(getFlipType());
+		}
+		bullet->setMove(true);
+		bulletList.push_back(bullet);
 	}
 	else if (events.type == SDL_MOUSEBUTTONUP && events.key.repeat == 0) {
-
+		//chua biet lam gi
 	}
 }
 
-void Player::update() {
+void Player::update(Tile* tile[]) {
+	int stt = 0; //stt của tile
+
 	//move x
 	x += xVel;
-	if (x < 0) x = 0;
-	if (x > LEVEL_WIDTH - currentFrame.w) x = LEVEL_WIDTH - currentFrame.w;
+	collision.x = x;
+
+	if (x < 0) {
+		x = 0;
+		collision.x = x;
+	}
+	if (x > LEVEL_WIDTH - currentFrame.w) {
+		x = LEVEL_WIDTH - currentFrame.w;
+		collision.x = x;
+	}
+	/*if (commonFunc::touchesWall(collision, tile, stt)) {
+		x -= xVel;
+		collision.x = x;
+	}*/
 
 	//move y
 	y += yVel;
-	if (y < 0) y = 0;
-	if (y > LEVEL_HEIGHT - currentFrame.h) y = LEVEL_HEIGHT - currentFrame.h;
+	collision.y = y;
+
+	if (y < 0) {
+		y = 0;
+		collision.y = y;
+	}
+	if (y > LEVEL_HEIGHT - currentFrame.h) {
+		y = LEVEL_HEIGHT - currentFrame.h;
+		collision.y = y;
+	}
+	/*if (commonFunc::touchesWall(collision, tile, stt)) {
+		y -= yVel;
+		collision.y = y;
+	}*/
 
 	//Gravity
 	if (!grounded) {
 		yVel += GRAVITY;
+		if (yVel > 40) yVel = 40;
 	}
 	/*else if( stand on ground() ) {
 		grounded = true;
@@ -105,6 +166,14 @@ void Player::handleCamera(SDL_Rect& camera) {
 	}
 }
 
-//void Player::render(SDL_Rect& camera) {
-//	commonFunc::renderTexture();
-//}
+void Player::render(SDL_Rect &p_camera, int &frame) {
+	if (running) {
+		commonFunc::renderAnimation(tex, x, y, walkingClips[frame/4], p_camera, 0, NULL, flipType);
+		frame++;
+		if (frame/4 >= WALKING_ANIMATION_FRAMES) frame = 0;
+	}
+
+	if (idling) {
+		commonFunc::renderAnimation(tex, x, y, walkingClips[0], p_camera, 0, NULL, flipType);
+	}
+}
