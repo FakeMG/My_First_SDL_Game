@@ -30,6 +30,18 @@ Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 		idlingClips[i].w = getCurrentFrame().w/4;
 		idlingClips[i].h = getCurrentFrame().h/5;
 	}
+	for (int i = 0; i < JUMPING_ANIMATION_FRAMES; i++) {
+		jumpingClips[i].x = i * (getCurrentFrame().w / 4);
+		jumpingClips[i].y = (getCurrentFrame().h/5) * 3;
+		jumpingClips[i].w = getCurrentFrame().w / 4;
+		jumpingClips[i].h = getCurrentFrame().h / 5;
+	}
+	for (int i = 0; i < FALLING_ANIMATION_FRAMES; i++) {
+		fallingClips[i].x = i * (getCurrentFrame().w / 4);
+		fallingClips[i].y = (getCurrentFrame().h / 5) * 4;
+		fallingClips[i].w = getCurrentFrame().w / 4;
+		fallingClips[i].h = getCurrentFrame().h / 5;
+	}
 }
 
 void Player::handleInput(SDL_Event &events) {
@@ -43,15 +55,9 @@ void Player::handleInput(SDL_Event &events) {
 			break;
 		case SDLK_a:
 			xVel -= PLAYER_VEL;
-			flipType = SDL_FLIP_HORIZONTAL;
-			running = true;
-			idling = false;
-				break;
+			break;
 		case SDLK_d:
 			xVel += PLAYER_VEL;
-			flipType = SDL_FLIP_NONE;
-			running = true;
-			idling = false;
 			break;
 		case SDLK_SPACE:
 			if (grounded) {
@@ -59,7 +65,6 @@ void Player::handleInput(SDL_Event &events) {
 			}
 			break;
 		default:
-			idling = true;
 			break;
 		}
 	}
@@ -73,13 +78,9 @@ void Player::handleInput(SDL_Event &events) {
 			break;
 		case SDLK_a:
 			xVel += PLAYER_VEL;
-			running = false;
-			idling = true;
 			break;
 		case SDLK_d:
 			xVel -= PLAYER_VEL;
-			running = false;
-			idling = true;
 			break;
 		default:
 			break;
@@ -102,6 +103,21 @@ void Player::handleInput(SDL_Event &events) {
 
 void Player::update(Tile* tile[]) {
 	int stt = 0; //stt của tile
+
+	if (xVel == 0 && yVel == 0 && grounded) idling = true;
+	else idling = false;
+
+	if (xVel != 0 && grounded) running = true;
+	else running = false;
+
+	if (xVel < 0) flipType = SDL_FLIP_HORIZONTAL;
+	if (xVel > 0) flipType = SDL_FLIP_NONE;
+
+	if (yVel > 0 && !grounded) falling = true;
+	else falling = false;
+
+	if (yVel < 0) jumping = true;
+	else jumping = false;
 
 	//move x
 	x += xVel;
@@ -148,13 +164,11 @@ void Player::update(Tile* tile[]) {
 	}*/
 }
 
-bool Player::jump() {
+void Player::jump() {
 	if (grounded) {
 		yVel -= 7;
 		grounded = false;
-		return true;
 	}
-	return false;
 }
 
 
@@ -184,10 +198,26 @@ void Player::render(SDL_Rect &p_camera) {
 		walkCounter++;
 		if (walkCounter/4 >= WALKING_ANIMATION_FRAMES) walkCounter = 0;
 	}
+	else walkCounter = 0;
 
 	if (idling) {
 		commonFunc::renderAnimation(tex, x, y, idlingClips[idleCounter/6], p_camera, 0, NULL, getFlipType());
 		idleCounter++;
 		if (idleCounter / 6 >= IDLING_ANIMATION_FRAMES) idleCounter = 0;
 	}
+	else idleCounter = 0;
+
+	if (jumping) {
+		commonFunc::renderAnimation(tex, x, y, jumpingClips[jumpCounter / 6], p_camera, 0, NULL, getFlipType());
+		jumpCounter++;
+		if (jumpCounter / 6 >= JUMPING_ANIMATION_FRAMES) jumpCounter = 0;
+	}
+	else jumpCounter = 0;
+
+	if (falling) {
+		commonFunc::renderAnimation(tex, x, y, fallingClips[fallingCounter / 4], p_camera, 0, NULL, getFlipType());
+		fallingCounter++;
+		if (fallingCounter / 4 >= FALLING_ANIMATION_FRAMES) fallingCounter = 0;
+	}
+	else fallingCounter = 0;
 }

@@ -20,6 +20,7 @@ void Bullet::move() {
 	else x -= BULLETSPEED;
 	
 	collision.x = x;
+	
 }
 
 void Bullet::setFlipType(SDL_RendererFlip p_PlayerflipType) {
@@ -36,6 +37,6 @@ void Bullet::setSize_Position(const int& p_width, const int& p_height, const int
 }
 
 void Bullet::render(SDL_Rect &camera, SDL_Texture* p_tex) {
-	commonFunc::renderAnimation(p_tex, getX(), getY(), bulletClips[bulletCounter/5], camera, 0, NULL, getFlipType());
+	commonFunc::renderAnimation(p_tex, getX(), getY(), bulletClips[bulletCounter/4], camera, 0, NULL, getFlipType());
 	bulletCounter++;
 }
