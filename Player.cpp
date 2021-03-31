@@ -1,17 +1,9 @@
-﻿#include <iostream>
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
-#include <SDL_mixer.h>
-#include <sstream>
-
-#include "Entity.h"
-#include "Player.h"
+﻿#include "Player.h"
 
 Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_tex) {
 	collision.x = getX() + PLAYER_WIDTH;
 	collision.y = getY() + PLAYER_HEIGHT;
-	collision.w = PLAYER_WIDTH - 12;
+	collision.w = PLAYER_WIDTH-12; //cho vừa với chân nhân vật
 	collision.h = PLAYER_HEIGHT;
 
 	for (int i = 0; i < WALKING_ANIMATION_FRAMES; i++) {
@@ -82,12 +74,17 @@ void Player::handleInput(SDL_Event &events) {
 		case SDLK_d:
 			xVel -= PLAYER_VEL;
 			break;
+		case SDLK_SPACE:
+			if (!grounded && jumping) {
+				yVel *= .5f;
+			}
+			break;
 		default:
 			break;
 		}
 	}
 	else if (events.type == SDL_MOUSEBUTTONDOWN && events.key.repeat == 0) {
-		Bullet* bullet = new Bullet(getCollision().x + PLAYER_WIDTH*1.25, getCollision().y, NULL);
+		Bullet *bullet = new Bullet(getCollision().x + PLAYER_WIDTH*1.25, getCollision().y, NULL);
 		if (events.button.button == SDL_BUTTON_LEFT) {
 			bullet->setFlipType(getFlipType());
 			bullet->setSize_Position(DEFAULTBULLET_W, DEFAULTBULLET_H, getX());
@@ -102,9 +99,16 @@ void Player::handleInput(SDL_Event &events) {
 }
 
 void Player::update(Tile* tile[]) {
-	int stt = 0; //stt của tile
+	
+	//Gravity
+	if (!grounded) {
+		yVel += GRAVITY;
+		if (yVel > MAX_GRAVITY) yVel = MAX_GRAVITY;
+	}
+	else yVel = GRAVITY;
 
-	if (xVel == 0 && yVel == 0 && grounded) idling = true;
+	// set trạng thái Player
+	if (xVel == 0 && yVel == GRAVITY && grounded) idling = true;
 	else idling = false;
 
 	if (xVel != 0 && grounded) running = true;
@@ -113,10 +117,10 @@ void Player::update(Tile* tile[]) {
 	if (xVel < 0) flipType = SDL_FLIP_HORIZONTAL;
 	if (xVel > 0) flipType = SDL_FLIP_NONE;
 
-	if (yVel > 0 && !grounded) falling = true;
+	if (yVel >= GRAVITY && !grounded) falling = true;
 	else falling = false;
 
-	if (yVel < 0) jumping = true;
+	if (yVel <= 0) jumping = true;
 	else jumping = false;
 
 	//move x
@@ -131,15 +135,15 @@ void Player::update(Tile* tile[]) {
 		x = LEVEL_WIDTH - 2*PLAYER_HEIGHT;
 		collision.x = x;
 	}
-	if (commonFunc::touchesWall(collision, tile, stt)) {
+	if (commonFunc::touchesWall(collision, tile)) {
 		x -= xVel;
 		collision.x = getX() + PLAYER_WIDTH;
 	}
 
 	//move y
 	y += yVel;
+	int stt = 0;
 	collision.y = getY() + PLAYER_HEIGHT;
-
 	if (getY() + PLAYER_HEIGHT < 0) {
 		y = -PLAYER_HEIGHT;
 		collision.y = getY() + PLAYER_HEIGHT;
@@ -149,28 +153,35 @@ void Player::update(Tile* tile[]) {
 		collision.y = getY() + PLAYER_HEIGHT;
 	}
 	if (commonFunc::touchesWall(collision, tile, stt)) {
-		y -= yVel;
+		if (yVel > 0) {
+			y = tile[stt]->getY() - 64*2-0.25;
+		}
+		else y -= yVel;
 		collision.y = getY() + PLAYER_HEIGHT;
+		if (falling) {
+			grounded = true;
+		}
 	}
-
-	//Gravity
-	if (!grounded) {
-		yVel += GRAVITY;
-		if (yVel > MAX_GRAVITY) yVel = MAX_GRAVITY;
-	}
-	/*else if( stand on ground() ) {
-		grounded = true;
-		yVel=0;
-	}*/
+	else grounded = false;
 }
 
 void Player::jump() {
 	if (grounded) {
-		yVel -= 7;
+		yVel -= 10;
 		grounded = false;
 	}
 }
 
+//void Player::isGrounded(Tile* tile[]) {
+//	if (falling) {
+//		if (commonFunc::touchesWall(getCollision(), tile)) {
+//			grounded = true;
+//			falling = false;
+//			cout << "true" << endl;
+//		}
+//		else cout << "no touch wall" << endl;
+//	}
+//}
 
 void Player::handleCamera(SDL_Rect& camera) {
 	//Di chuyển camera theo nhân vật

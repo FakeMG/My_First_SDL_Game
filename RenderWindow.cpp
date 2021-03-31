@@ -84,24 +84,40 @@ bool commonFunc::checkCollision(SDL_Rect a, SDL_Rect b) {
 	bottomB = b.y + b.h;
 
 	//If any of the sides from A are outside of B
-	if (bottomA <= topB) {
+	if (bottomA < topB) {
 		return false;
 	}
 
-	if (topA >= bottomB) {
+	if (topA > bottomB) {
 		return false;
 	}
 
-	if (rightA <= leftB) {
+	if (rightA < leftB) {
 		return false;
 	}
 
-	if (leftA >= rightB) {
+	if (leftA > rightB) {
 		return false;
 	}
 
 	//If none of the sides from A are outside B
 	return true;
+}
+
+bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[]) {
+	//Go through the tiles
+	for (int i = 0; i < TOTAL_TILES; ++i) {
+		//If the tile is a wall type tile
+		if ((tiles[i]->getType() >= TILE_CENTER) && (tiles[i]->getType() <= TILE_TOPLEFT)) {
+			//If the collision box touches the wall tile
+			if (checkCollision(box, tiles[i]->getCollision())) {
+				return true;
+			}
+		}
+	}
+
+	//If no wall tiles were touched
+	return false;
 }
 
 bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[], int &stt) {

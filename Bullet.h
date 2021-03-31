@@ -13,18 +13,19 @@ using namespace std;
 
 const int DEFAULTBULLET_W = 64;
 const int DEFAULTBULLET_H = 64;
-
-const int BULLETSPEED = 15;
+const float BULLETSPEED = 2.5;
 
 class Bullet : public Entity {
 private:
+	float xVel = 7;
 	bool moving = false;
 	int bulletType;
 	SDL_Rect collision;
 
-	static const int BULLET_ANIMATION_FRAMES = 4;
+	static const int BULLET_ANIMATION_FRAMES = 5;
 	SDL_Rect bulletClips[BULLET_ANIMATION_FRAMES];
 	int bulletCounter = 0;
+	const int delay = 4;
 public:
 	enum bulletType {
 		NONE = 0,
@@ -32,7 +33,7 @@ public:
 	};
 	Bullet(float p_x, float p_y, SDL_Texture* p_tex);
 	void handelInput(SDL_Event &events);
-	void move();
+	void update();
 	void render(SDL_Rect& camera, SDL_Texture* p_tex);
 
 	//getter

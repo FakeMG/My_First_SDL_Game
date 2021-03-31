@@ -13,7 +13,7 @@ class Tile;
 
 using namespace std;
 
-const float GRAVITY = 0.25;
+const float GRAVITY = 0.3;
 const float MAX_GRAVITY = 15;
 
 //screen
@@ -62,6 +62,7 @@ namespace commonFunc {
 	void renderAnimation(SDL_Texture* p_tex, float p_x, float p_y, SDL_Rect& p_clip, SDL_Rect& p_camera, double p_angle = 0.0, SDL_Point* p_center = NULL, SDL_RendererFlip p_flip = SDL_FLIP_NONE);
 
 	bool checkCollision(SDL_Rect a, SDL_Rect b);
+	bool touchesWall(SDL_Rect box, Tile* tiles[]);
 	bool touchesWall(SDL_Rect box, Tile* tiles[], int &stt);
 
 	//Font

@@ -15,11 +15,14 @@ void Bullet::handelInput(SDL_Event& events) {
 
 }
 
-void Bullet::move() {
-	if (flipType == SDL_FLIP_NONE) x += BULLETSPEED;
-	else x -= BULLETSPEED;
-	
-	collision.x = x;
+void Bullet::update() {
+	if (bulletCounter/delay < 3) {
+		xVel += BULLETSPEED;
+		if (flipType == SDL_FLIP_NONE) x += xVel;
+		else x -= xVel;
+		collision.x = x;
+	}
+	if (bulletCounter/delay == BULLET_ANIMATION_FRAMES) setMove(false);
 	
 }
 
@@ -37,6 +40,6 @@ void Bullet::setSize_Position(const int& p_width, const int& p_height, const int
 }
 
 void Bullet::render(SDL_Rect &camera, SDL_Texture* p_tex) {
-	commonFunc::renderAnimation(p_tex, getX(), getY(), bulletClips[bulletCounter/4], camera, 0, NULL, getFlipType());
+	commonFunc::renderAnimation(p_tex, getX(), getY(), bulletClips[bulletCounter/ delay], camera, 0, NULL, getFlipType());
 	bulletCounter++;
 }

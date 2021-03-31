@@ -9,6 +9,7 @@
 #include "RenderWindow.h"
 #include "Entity.h"
 #include "Player.h"
+#include "Skeleton.h"
 #include "Timer.h"
 #include "Tile.h"
 using namespace std;
@@ -17,6 +18,7 @@ SDL_Event event;
 
 SDL_Texture* bgTex = NULL;
 SDL_Texture* FakeMG = NULL;
+SDL_Texture* Skeleton = NULL;
 SDL_Texture* tileTex = NULL;
 SDL_Texture* bulletTex = NULL;
 
@@ -44,6 +46,7 @@ int main(int argc, char* argv[]) {
         else {
             Player knight(0, 0, FakeMG);
             Entity bg(0, 0, bgTex);
+            //Skeleton test(0, 0, FakeMG);
             if (!setTiles(tileSet)) {
                 printf("Failed to load tile set!\n");
             }
@@ -56,24 +59,31 @@ int main(int argc, char* argv[]) {
                     if (event.type == SDL_QUIT) gameRunning = false;
                     knight.handleInput(event);
                 }
-                knight.update(tileSet);
-                knight.handleCamera(camera);
 
                 commonFunc::clearRenderer();
+                //render tile
                 for (int i = 0; i < TOTAL_TILES; i++) {
                     commonFunc::renderTile(*tileSet[i], gTileClips[tileSet[i]->getType()], camera);
                 }
-
+                //bullet
                 for (int i = 0; i < knight.getBulletList().size(); i++) {
-                    if (knight.getBulletList().at(i) != NULL) {
-                        if (knight.getBulletList().at(i)->isMoving()) {
-                            knight.getBulletList().at(i)->render(camera, bulletTex);
-                            knight.getBulletList().at(i)->move();
+                    vector<Bullet*> bulletList = knight.getBulletList();
+                    if (bulletList.at(i) != NULL) {
+                        if (bulletList.at(i)->isMoving()) {
+                            bulletList.at(i)->render(camera, bulletTex);
+                            bulletList.at(i)->update();
                         }
-                        else knight.getBulletList().erase(knight.getBulletList().begin() + i);
+                        else {
+                            delete bulletList.at(i);
+                            bulletList.at(i) = NULL;
+                            bulletList.erase(bulletList.begin() + i);
+                            knight.setBulletList(bulletList);
+                        }
                     }
                 }
 
+                knight.update(tileSet);
+                knight.handleCamera(camera);
                 knight.render(camera);
                 FPSCounter();
                 commonFunc::renderPresent();
@@ -112,13 +122,18 @@ bool init() {
 bool loadMedia() {
     bool success = true;
     if (!commonFunc::loadFont("res/lazy.ttf")) success = false;
+
     bgTex = commonFunc::loadTexture("res/gtx/Doge.jpg");
     if (bgTex == NULL) success = false;
+
     FakeMG = commonFunc::loadTexture("res/gtx/Metal knight.png");
     if (FakeMG == NULL) success = false;
+
     tileTex = commonFunc::loadTexture("res/gtx/tiles.png");
     if (tileTex == NULL) success = false;
+
     bulletTex = commonFunc::loadTexture("res/gtx/Bullet.png");
+    if (bulletTex == NULL) success = false;
     return success;
 }
 void FPSCounter() {
