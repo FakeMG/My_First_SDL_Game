@@ -21,14 +21,14 @@ const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
 
 //level
-const int LEVEL_WIDTH = 1280;
-const int LEVEL_HEIGHT = 960;
+const int LEVEL_WIDTH = 9472;
+const int LEVEL_HEIGHT = 1024;
 
 //tile
-const int TILE_WIDTH = 80;
-const int TILE_HEIGHT = 80;
-const int TOTAL_TILES = 192;
-const int TOTAL_TILE_SPRITES = 12;
+const int TILE_WIDTH = 64;
+const int TILE_HEIGHT = 64;
+const int TOTAL_TILES = 2368;
+const int TOTAL_TILE_SPRITES = 187;
 
 const int TILE_RED = 0;
 const int TILE_GREEN = 1;

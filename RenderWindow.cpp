@@ -108,7 +108,7 @@ bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[]) {
 	//Go through the tiles
 	for (int i = 0; i < TOTAL_TILES; ++i) {
 		//If the tile is a wall type tile
-		if ((tiles[i]->getType() >= TILE_CENTER) && (tiles[i]->getType() <= TILE_TOPLEFT)) {
+		if ((tiles[i]->getType() >= 0) && (tiles[i]->getType() <= 84)) {
 			//If the collision box touches the wall tile
 			if (checkCollision(box, tiles[i]->getCollision())) {
 				return true;
@@ -124,7 +124,7 @@ bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[], int &stt) {
 	//Go through the tiles
 	for (int i = 0; i < TOTAL_TILES; ++i) {
 		//If the tile is a wall type tile
-		if ((tiles[i]->getType() >= TILE_CENTER) && (tiles[i]->getType() <= TILE_TOPLEFT)) {
+		if ((tiles[i]->getType() >= 0) && (tiles[i]->getType() <= 84)) {
 			//If the collision box touches the wall tile
 			if (checkCollision(box, tiles[i]->getCollision())) {
 				stt = i;

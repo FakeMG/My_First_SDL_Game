@@ -163,6 +163,11 @@ void Player::update(Tile* tile[]) {
 		}
 	}
 	else grounded = false;
+
+	if (getY() >= LEVEL_HEIGHT - 64*2) {
+		y = 64 * 10;
+		x = 64 * 3;
+	}
 }
 
 void Player::jump() {

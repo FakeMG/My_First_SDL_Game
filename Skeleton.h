@@ -1,4 +1,5 @@
-﻿#pragma once
+#pragma once
+#pragma once
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -7,8 +8,8 @@
 #include <math.h>
 
 #include "RenderWindow.h"
-#include "Entity.h"
 #include "Player.h"
+#include "Entity.h"
 
 using namespace std;
 

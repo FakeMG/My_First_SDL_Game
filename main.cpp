@@ -18,7 +18,7 @@ SDL_Event event;
 
 SDL_Texture* bgTex = NULL;
 SDL_Texture* FakeMG = NULL;
-SDL_Texture* Skeleton = NULL;
+SDL_Texture* skeletonTex = NULL;
 SDL_Texture* tileTex = NULL;
 SDL_Texture* bulletTex = NULL;
 
@@ -44,9 +44,9 @@ int main(int argc, char* argv[]) {
     else {
         if (!loadMedia()) return 0;
         else {
-            Player knight(0, 0, FakeMG);
+            Player knight(64*3, 64*10, FakeMG);
             Entity bg(0, 0, bgTex);
-            //Skeleton test(0, 0, FakeMG);
+            Skeleton test(0, 0, FakeMG);
             if (!setTiles(tileSet)) {
                 printf("Failed to load tile set!\n");
             }
@@ -129,7 +129,7 @@ bool loadMedia() {
     FakeMG = commonFunc::loadTexture("res/gtx/Metal knight.png");
     if (FakeMG == NULL) success = false;
 
-    tileTex = commonFunc::loadTexture("res/gtx/tiles.png");
+    tileTex = commonFunc::loadTexture("res/gtx/Tileset.png");
     if (tileTex == NULL) success = false;
 
     bulletTex = commonFunc::loadTexture("res/gtx/Bullet.png");
@@ -158,7 +158,7 @@ bool setTiles(Tile* tiles[]) {
     int x = 0, y = 0;
 
     //Mở map
-    ifstream map("res/gtx/lazy.map");
+    ifstream map("res/gtx/map.map");
 
     //Nếu ko đọc đc dữ liệu trong map
     if (map.fail()) {
@@ -172,7 +172,7 @@ bool setTiles(Tile* tiles[]) {
             //Chọn loại cho tile
             int tileType = -1;
 
-            //Đọc tu map
+            //Đọc từ map
             map >> tileType;
 
             //Debug
@@ -206,66 +206,19 @@ bool setTiles(Tile* tiles[]) {
         }
 
         if (tilesLoaded)
-        {
-            gTileClips[TILE_RED].x = 0;
-            gTileClips[TILE_RED].y = 0;
-            gTileClips[TILE_RED].w = TILE_WIDTH;
-            gTileClips[TILE_RED].h = TILE_HEIGHT;
-
-            gTileClips[TILE_GREEN].x = 0;
-            gTileClips[TILE_GREEN].y = 80;
-            gTileClips[TILE_GREEN].w = TILE_WIDTH;
-            gTileClips[TILE_GREEN].h = TILE_HEIGHT;
-
-            gTileClips[TILE_BLUE].x = 0;
-            gTileClips[TILE_BLUE].y = 160;
-            gTileClips[TILE_BLUE].w = TILE_WIDTH;
-            gTileClips[TILE_BLUE].h = TILE_HEIGHT;
-
-            gTileClips[TILE_TOPLEFT].x = 80;
-            gTileClips[TILE_TOPLEFT].y = 0;
-            gTileClips[TILE_TOPLEFT].w = TILE_WIDTH;
-            gTileClips[TILE_TOPLEFT].h = TILE_HEIGHT;
-
-            gTileClips[TILE_LEFT].x = 80;
-            gTileClips[TILE_LEFT].y = 80;
-            gTileClips[TILE_LEFT].w = TILE_WIDTH;
-            gTileClips[TILE_LEFT].h = TILE_HEIGHT;
-
-            gTileClips[TILE_BOTTOMLEFT].x = 80;
-            gTileClips[TILE_BOTTOMLEFT].y = 160;
-            gTileClips[TILE_BOTTOMLEFT].w = TILE_WIDTH;
-            gTileClips[TILE_BOTTOMLEFT].h = TILE_HEIGHT;
-
-            gTileClips[TILE_TOP].x = 160;
-            gTileClips[TILE_TOP].y = 0;
-            gTileClips[TILE_TOP].w = TILE_WIDTH;
-            gTileClips[TILE_TOP].h = TILE_HEIGHT;
-
-            gTileClips[TILE_CENTER].x = 160;
-            gTileClips[TILE_CENTER].y = 80;
-            gTileClips[TILE_CENTER].w = TILE_WIDTH;
-            gTileClips[TILE_CENTER].h = TILE_HEIGHT;
-
-            gTileClips[TILE_BOTTOM].x = 160;
-            gTileClips[TILE_BOTTOM].y = 160;
-            gTileClips[TILE_BOTTOM].w = TILE_WIDTH;
-            gTileClips[TILE_BOTTOM].h = TILE_HEIGHT;
-
-            gTileClips[TILE_TOPRIGHT].x = 240;
-            gTileClips[TILE_TOPRIGHT].y = 0;
-            gTileClips[TILE_TOPRIGHT].w = TILE_WIDTH;
-            gTileClips[TILE_TOPRIGHT].h = TILE_HEIGHT;
-
-            gTileClips[TILE_RIGHT].x = 240;
-            gTileClips[TILE_RIGHT].y = 80;
-            gTileClips[TILE_RIGHT].w = TILE_WIDTH;
-            gTileClips[TILE_RIGHT].h = TILE_HEIGHT;
-
-            gTileClips[TILE_BOTTOMRIGHT].x = 240;
-            gTileClips[TILE_BOTTOMRIGHT].y = 160;
-            gTileClips[TILE_BOTTOMRIGHT].w = TILE_WIDTH;
-            gTileClips[TILE_BOTTOMRIGHT].h = TILE_HEIGHT;
+        {   
+            int m = 0, n = 0;
+            for (int i = 0; i < TOTAL_TILE_SPRITES; i++) {
+                gTileClips[i].x = n;
+                gTileClips[i].y = m;
+                gTileClips[i].w = TILE_WIDTH;
+                gTileClips[i].h = TILE_HEIGHT;
+                n += TILE_WIDTH;
+                if (n >= 1088) {
+                    n = 0;
+                    m += TILE_HEIGHT;
+                }
+            }
         }
     }
 
