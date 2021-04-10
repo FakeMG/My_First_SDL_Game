@@ -4,15 +4,11 @@ Skeleton::Skeleton(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, 
 	collision.x = getX() + SKELETON_WIDTH;
 	collision.y = getY() + SKELETON_HEIGHT;
 	collision.w = SKELETON_WIDTH;
-	collision.h = SKELETON_HEIGHT;
+	collision.h = SKELETON_HEIGHT-2;
 
 	for (int i = 0; i < WALKING_ANIMATION_FRAMES; i++) {
 		walkingClips[i].x = i * (getCurrentFrame().w / 4);
-		if (i >= 4) {
-			walkingClips[i].x = (i - 4) * (getCurrentFrame().w / 4);
-			walkingClips[i].y = (getCurrentFrame().h / 5) * 2;
-		}
-		else walkingClips[i].y = getCurrentFrame().h / 5;
+		walkingClips[i].y = getCurrentFrame().h / 5;
 		walkingClips[i].w = getCurrentFrame().w / 4;
 		walkingClips[i].h = getCurrentFrame().h / 5;
 	}
@@ -30,41 +26,151 @@ Skeleton::Skeleton(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, 
 	}
 	for (int i = 0; i < ATTACKING_ANIMATION_FRAMES; i++) {
 		attackingClips[i].x = i * (getCurrentFrame().w / 4);
-		attackingClips[i].y = (getCurrentFrame().h / 5) * 4;
+		attackingClips[i].y = (getCurrentFrame().h / 5) * 3;
 		attackingClips[i].w = getCurrentFrame().w / 4;
 		attackingClips[i].h = getCurrentFrame().h / 5;
 	}
-}
-
-void Skeleton::move(Player& p_player) {
-	float distance = sqrt(pow(p_player.getX() - getX(), 2) + pow(p_player.getY() - getY(), 2));
-	if ((p_player.getY() >= getY() - 64 && p_player.getY() <= getY() + 64) && distance <= 64 * 2) {
-		xVel = SKELETON_VEL;
+	for (int i = 0; i < BEINGHIT_ANIMATION_FRAMES; i++) {
+		beingHitClips[i].x = i * (getCurrentFrame().w / 4);
+		beingHitClips[i].y = (getCurrentFrame().h / 5) * 2;
+		beingHitClips[i].w = getCurrentFrame().w / 4;
+		beingHitClips[i].h = getCurrentFrame().h / 5;
 	}
-	else xVel = 0;
 }
 
-void Skeleton::update(Tile* tile[]) {
-	// set trạng thái Skeletpn
-	if (xVel == 0 && yVel == 0 && grounded) idling = true;
+void Skeleton::update(Player& p_player, Tile* tile[]) {
+	if (!beingHit) {
+		if (xVel < 0) flipType = SDL_FLIP_HORIZONTAL;
+		if (xVel > 0) flipType = SDL_FLIP_NONE;
+	}
+	gravity();
+	getHit(p_player);
+	autoMovement(tile);
+	moveToPlayer(p_player, tile);
+	knockBack();
+	
+	//update trạng thái Skeleton
+	if (xVel == 0 && grounded && !attacking && !dead && !beingHit) idling = true;
 	else idling = false;
 
-	if (xVel != 0 && grounded) walking = true;
+	if (xVel != 0 && grounded && !attacking && !dead && !beingHit) walking = true;
 	else walking = false;
 
-	if (xVel < 0) flipType = SDL_FLIP_HORIZONTAL;
-	if (xVel > 0) flipType = SDL_FLIP_NONE;
-
-	if (yVel > 0 && !grounded) falling = true;
+	if (yVel > 0 && !grounded && !dead && !beingHit) falling = true;
 	else falling = false;
 
 	//move x
-	x += xVel;
-	collision.x = getX() + SKELETON_WIDTH;
+	if (!attacking) {
+		x += xVel;
+		collision.x = getX() + SKELETON_WIDTH;
+
+		if (getX() + SKELETON_WIDTH < 0) {
+			x = -SKELETON_WIDTH;
+			collision.x = getX() + SKELETON_WIDTH;
+			xVel *= -1;
+		}
+		if (getX() + 2 * SKELETON_HEIGHT > LEVEL_WIDTH) {
+			x = LEVEL_WIDTH - 2 * SKELETON_HEIGHT;
+			collision.x = getX() + SKELETON_WIDTH;
+			xVel *= -1;
+		}
+		if (commonFunc::touchesWall(collision, tile)) {
+			x -= xVel;
+			collision.x = getX() + SKELETON_WIDTH;
+			xVel *= -1;
+		}
+	}
 
 	//move y
 	y += yVel;
 	collision.y = getY() + SKELETON_HEIGHT;
+	if (getY() + SKELETON_HEIGHT < 0) {
+		y = -SKELETON_HEIGHT;
+		collision.y = getY() + SKELETON_HEIGHT;
+	}
+	if (commonFunc::touchesWall(collision, tile, groundSTT)) {
+		if (yVel > 0) {
+			y = tile[groundSTT]->getY() - 64 * 2 - 0.1 + 2;
+			if (falling) {
+				grounded = true;
+			}
+		}
+		else if (yVel < 0) {
+			y -= yVel;
+			yVel = 0;
+		}
+		collision.y = getY() + SKELETON_HEIGHT;
+	}
+	else grounded = false;
+	
+}
+
+void Skeleton::gravity() {
+	if (!grounded) {
+		yVel += GRAVITY;
+		if (yVel > MAX_GRAVITY) yVel = MAX_GRAVITY;
+	}
+	else yVel = GRAVITY;
+}
+
+void Skeleton::moveToPlayer(Player& p_player, Tile* tile[]) {
+	distanceToPlayer = sqrt(pow(p_player.getX() - getX(), 2) + pow(p_player.getY() - getY(), 2));
+	if (!beingHit) {
+		//trong tầm nhìn của skeleton
+		if ((p_player.getY() >= getY() - TILE_WIDTH && p_player.getY() <= getY() + TILE_WIDTH * 0.5) && distanceToPlayer <= TILE_WIDTH * 7) {
+			if (p_player.getX() - getX() < 0) {
+				if (tile[groundSTT - 1]->getType() > 84) xVel = 0;
+				else xVel = -SKELETON_VEL;
+			}
+			else if (tile[groundSTT + 1]->getType() > 84) xVel = 0;
+			else xVel = SKELETON_VEL;
+		}
+	}
+	if ( (distanceToPlayer <= TILE_WIDTH * 1.5 || (p_player.getY() >= getY() - TILE_WIDTH * 2.5 && p_player.getY() <= getY() - 64 && distanceToPlayer <= TILE_WIDTH * 2.5)) && !dead && !beingHit && grounded) attacking = true;
+	else attacking = false;
+}
+
+void Skeleton::autoMovement(Tile* tile[]) {
+	if (grounded && !beingHit) {
+		if (tile[groundSTT + 1]->getType() > 84 && tile[groundSTT - 2]->getType() > 84) xVel = 0;
+		else if (tile[groundSTT + 1]->getType() > 84 && xVel > 0) xVel = -SKELETON_VEL * 0.5;
+		else if (tile[groundSTT - 1]->getType() > 84 && xVel < 0) xVel = SKELETON_VEL * 0.5;
+		else if (tile[groundSTT + 2]->getType() > 84 && tile[groundSTT - 2]->getType() > 84) xVel = 0;
+		else if(getFlipType() == SDL_FLIP_NONE) xVel = SKELETON_VEL * 0.5;
+		else if(getFlipType() == SDL_FLIP_HORIZONTAL) xVel = -SKELETON_VEL * 0.5;
+	}
+}
+
+bool Skeleton::isAttacking() {
+	if (attackingCounter / 7 >= 2) return true;
+	return false;
+}
+
+void Skeleton::getHit(Player& p_player) {
+	for (int i = 0; i < p_player.getBulletList().size(); i++) {
+		if (p_player.getBulletList().at(i) != NULL) {
+			if (commonFunc::checkCollision(p_player.getBulletList().at(i)->getCollision(), getCollision())) {
+				if (p_player.getBulletList().at(i)->getX() >= getX() + SKELETON_WIDTH && p_player.getBulletList().at(i)->getX() <= getX()+SKELETON_WIDTH*1.5) {
+					beingHit = true;
+					maxHealth--;
+					p_player.getBulletList().at(i)->setMove(false);
+				}
+			}
+		}
+	}
+	if (beingHitCounter / 7 >= BEINGHIT_ANIMATION_FRAMES) {
+		beingHit = false;
+		beingHitCounter = 0;
+	}
+	if (maxHealth <= 0) dead = true;
+}
+
+void Skeleton::knockBack() {
+	if (beingHit && beingHitCounter==0) {
+		yVel = -3;
+		if (getFlipType() == SDL_FLIP_NONE) xVel = -4;
+		else if(getFlipType() == SDL_FLIP_HORIZONTAL ) xVel = 4;
+	}
 }
 
 void Skeleton::render(SDL_Rect& p_camera) {
@@ -73,7 +179,6 @@ void Skeleton::render(SDL_Rect& p_camera) {
 		walkCounter++;
 		if (walkCounter / 4 >= WALKING_ANIMATION_FRAMES) walkCounter = 0;
 	}
-	else walkCounter = 0;
 
 	if (idling) {
 		commonFunc::renderAnimation(tex, x, y, idlingClips[idleCounter / 6], p_camera, 0, NULL, getFlipType());
@@ -88,4 +193,17 @@ void Skeleton::render(SDL_Rect& p_camera) {
 		if (fallingCounter / 4 >= FALLING_ANIMATION_FRAMES) fallingCounter = 0;
 	}
 	else fallingCounter = 0;
+
+	if (attacking) {
+		commonFunc::renderAnimation(tex, x, y, attackingClips[attackingCounter / 7], p_camera, 0, NULL, getFlipType());
+		attackingCounter++;
+		if (attackingCounter / 7 >= ATTACKING_ANIMATION_FRAMES) attackingCounter = 0;
+	}
+	else attackingCounter = 0;
+
+	if (beingHit) {
+		commonFunc::renderAnimation(tex, x, y, beingHitClips[beingHitCounter / 7], p_camera, 0, NULL, getFlipType());
+		beingHitCounter++;
+	}
+	else beingHitCounter = 0;
 }

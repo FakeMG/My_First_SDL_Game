@@ -16,7 +16,6 @@ using namespace std;
 
 SDL_Event event;
 
-SDL_Texture* bgTex = NULL;
 SDL_Texture* FakeMG = NULL;
 SDL_Texture* skeletonTex = NULL;
 SDL_Texture* tileTex = NULL;
@@ -44,9 +43,8 @@ int main(int argc, char* argv[]) {
     else {
         if (!loadMedia()) return 0;
         else {
-            Player knight(64*3, 64*10, FakeMG);
-            Entity bg(0, 0, bgTex);
-            Skeleton test(0, 0, FakeMG);
+            Player knight(64*3, LEVEL_HEIGHT - TILE_HEIGHT * 3, FakeMG);
+            Skeleton test(64 * 18, LEVEL_HEIGHT - TILE_HEIGHT * 9, skeletonTex);
             if (!setTiles(tileSet)) {
                 printf("Failed to load tile set!\n");
             }
@@ -61,17 +59,19 @@ int main(int argc, char* argv[]) {
                 }
 
                 commonFunc::clearRenderer();
+
                 //render tile
                 for (int i = 0; i < TOTAL_TILES; i++) {
                     commonFunc::renderTile(*tileSet[i], gTileClips[tileSet[i]->getType()], camera);
                 }
-                //bullet
+
+                //render bullet
                 for (int i = 0; i < knight.getBulletList().size(); i++) {
                     vector<Bullet*> bulletList = knight.getBulletList();
                     if (bulletList.at(i) != NULL) {
                         if (bulletList.at(i)->isMoving()) {
                             bulletList.at(i)->render(camera, bulletTex);
-                            bulletList.at(i)->update();
+                            bulletList.at(i)->update(tileSet);
                         }
                         else {
                             delete bulletList.at(i);
@@ -82,9 +82,14 @@ int main(int argc, char* argv[]) {
                     }
                 }
 
-                knight.update(tileSet);
+                //render player
+                knight.update(tileSet, test);
                 knight.handleCamera(camera);
                 knight.render(camera);
+
+                test.update(knight, tileSet);
+                test.render(camera);
+
                 FPSCounter();
                 commonFunc::renderPresent();
             }
@@ -123,9 +128,6 @@ bool loadMedia() {
     bool success = true;
     if (!commonFunc::loadFont("res/lazy.ttf")) success = false;
 
-    bgTex = commonFunc::loadTexture("res/gtx/Doge.jpg");
-    if (bgTex == NULL) success = false;
-
     FakeMG = commonFunc::loadTexture("res/gtx/Metal knight.png");
     if (FakeMG == NULL) success = false;
 
@@ -134,6 +136,10 @@ bool loadMedia() {
 
     bulletTex = commonFunc::loadTexture("res/gtx/Bullet.png");
     if (bulletTex == NULL) success = false;
+
+    skeletonTex = commonFunc::loadTexture("res/gtx/Skeleton.png");
+    if (skeletonTex == NULL) success = false;
+
     return success;
 }
 void FPSCounter() {

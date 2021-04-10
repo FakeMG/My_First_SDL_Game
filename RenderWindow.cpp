@@ -65,25 +65,21 @@ void commonFunc::renderPlayer(Entity& entity, SDL_Rect &camera) {
 }
 
 bool commonFunc::checkCollision(SDL_Rect a, SDL_Rect b) {
-	//The sides of the rectangles
 	int leftA, leftB;
 	int rightA, rightB;
 	int topA, topB;
 	int bottomA, bottomB;
 
-	//Calculate the sides of rect A
 	leftA = a.x;
 	rightA = a.x + a.w;
 	topA = a.y;
 	bottomA = a.y + a.h;
 
-	//Calculate the sides of rect B
 	leftB = b.x;
 	rightB = b.x + b.w;
 	topB = b.y;
 	bottomB = b.y + b.h;
 
-	//If any of the sides from A are outside of B
 	if (bottomA < topB) {
 		return false;
 	}
@@ -100,40 +96,29 @@ bool commonFunc::checkCollision(SDL_Rect a, SDL_Rect b) {
 		return false;
 	}
 
-	//If none of the sides from A are outside B
 	return true;
 }
 
 bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[]) {
-	//Go through the tiles
 	for (int i = 0; i < TOTAL_TILES; ++i) {
-		//If the tile is a wall type tile
 		if ((tiles[i]->getType() >= 0) && (tiles[i]->getType() <= 84)) {
-			//If the collision box touches the wall tile
 			if (checkCollision(box, tiles[i]->getCollision())) {
 				return true;
 			}
 		}
 	}
-
-	//If no wall tiles were touched
 	return false;
 }
 
 bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[], int &stt) {
-	//Go through the tiles
 	for (int i = 0; i < TOTAL_TILES; ++i) {
-		//If the tile is a wall type tile
 		if ((tiles[i]->getType() >= 0) && (tiles[i]->getType() <= 84)) {
-			//If the collision box touches the wall tile
 			if (checkCollision(box, tiles[i]->getCollision())) {
 				stt = i;
 				return true;
 			}
 		}
 	}
-
-	//If no wall tiles were touched
 	return false;
 }
 

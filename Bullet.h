@@ -33,7 +33,7 @@ public:
 	};
 	Bullet(float p_x, float p_y, SDL_Texture* p_tex);
 	void handelInput(SDL_Event &events);
-	void update();
+	void update(Tile* tile[]);
 	void render(SDL_Rect& camera, SDL_Texture* p_tex);
 
 	//getter

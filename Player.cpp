@@ -4,7 +4,7 @@ Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 	collision.x = getX() + PLAYER_WIDTH;
 	collision.y = getY() + PLAYER_HEIGHT;
 	collision.w = PLAYER_WIDTH-12; //cho vừa với chân nhân vật
-	collision.h = PLAYER_HEIGHT;
+	collision.h = PLAYER_HEIGHT-2; //cho nhân vật vừa trong 1 ô
 
 	for (int i = 0; i < WALKING_ANIMATION_FRAMES; i++) {
 		walkingClips[i].x = i * (getCurrentFrame().w/4);
@@ -37,137 +37,120 @@ Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 }
 
 void Player::handleInput(SDL_Event &events) {
-	if (events.type == SDL_KEYDOWN && events.key.repeat == 0) {
-		switch (events.key.keysym.sym) {
-		case SDLK_w:
-			yVel -= PLAYER_VEL;
-			break;
-		case SDLK_s:
-			yVel += PLAYER_VEL;
-			break;
-		case SDLK_a:
-			xVel -= PLAYER_VEL;
-			break;
-		case SDLK_d:
-			xVel += PLAYER_VEL;
-			break;
-		case SDLK_SPACE:
-			if (grounded) {
-				jump();
+	if (!dead) {
+		if (events.type == SDL_KEYDOWN && events.key.repeat == 0) {
+			switch (events.key.keysym.sym) {
+			case SDLK_a:
+				xVel -= PLAYER_VEL;
+				break;
+			case SDLK_d:
+				xVel += PLAYER_VEL;
+				break;
+			case SDLK_SPACE:
+				if (grounded) {
+					jump();
+				}
+				break;
+			default:
+				break;
 			}
-			break;
-		default:
-			break;
 		}
-	}
-	else if (events.type == SDL_KEYUP && events.key.repeat == 0) {
-		switch (events.key.keysym.sym) {
-		case SDLK_w:
-			yVel += PLAYER_VEL;
-			break;
-		case SDLK_s:
-			yVel -= PLAYER_VEL;
-			break;
-		case SDLK_a:
-			xVel += PLAYER_VEL;
-			break;
-		case SDLK_d:
-			xVel -= PLAYER_VEL;
-			break;
-		case SDLK_SPACE:
-			if (!grounded && jumping) {
-				yVel *= .5f;
+		else if (events.type == SDL_KEYUP && events.key.repeat == 0) {
+			switch (events.key.keysym.sym) {
+			case SDLK_a:
+				xVel += PLAYER_VEL;
+				break;
+			case SDLK_d:
+				xVel -= PLAYER_VEL;
+				break;
+			case SDLK_SPACE:
+				if (!grounded && jumping) {
+					yVel *= .5f;
+				}
+				break;
+			default:
+				break;
 			}
-			break;
-		default:
-			break;
 		}
-	}
-	else if (events.type == SDL_MOUSEBUTTONDOWN && events.key.repeat == 0) {
-		Bullet *bullet = new Bullet(getCollision().x + PLAYER_WIDTH*1.25, getCollision().y, NULL);
-		if (events.button.button == SDL_BUTTON_LEFT) {
-			bullet->setFlipType(getFlipType());
-			bullet->setSize_Position(DEFAULTBULLET_W, DEFAULTBULLET_H, getX());
-			bullet->setType(Bullet::NORMAL);
+		else if (events.type == SDL_MOUSEBUTTONDOWN && events.key.repeat == 0) {
+			Bullet* bullet = new Bullet(getCollision().x + PLAYER_WIDTH * 1.25, getCollision().y, NULL);
+			if (events.button.button == SDL_BUTTON_LEFT) {
+				bullet->setFlipType(getFlipType());
+				bullet->setSize_Position(DEFAULTBULLET_W, DEFAULTBULLET_H, getX());
+				bullet->setType(Bullet::NORMAL);
+			}
+			bullet->setMove(true);
+			bulletList.push_back(bullet);
 		}
-		bullet->setMove(true);
-		bulletList.push_back(bullet);
-	}
-	else if (events.type == SDL_MOUSEBUTTONUP && events.key.repeat == 0) {
-		//chua biet lam gi
+		else if (events.type == SDL_MOUSEBUTTONUP && events.key.repeat == 0) {
+			//chua biet lam gi
+		}
 	}
 }
 
-void Player::update(Tile* tile[]) {
-	
-	//Gravity
-	if (!grounded) {
-		yVel += GRAVITY;
-		if (yVel > MAX_GRAVITY) yVel = MAX_GRAVITY;
-	}
-	else yVel = GRAVITY;
+void Player::update(Tile* tile[], Skeleton &p_skeleton) {
+	gravity();
+	getHit(p_skeleton);
+	//knockBack();
 
 	// set trạng thái Player
-	if (xVel == 0 && yVel == GRAVITY && grounded) idling = true;
+	if (xVel == 0 && grounded && !dead) idling = true;
 	else idling = false;
 
-	if (xVel != 0 && grounded) running = true;
+	if (xVel != 0 && grounded && !dead) running = true;
 	else running = false;
 
-	if (xVel < 0) flipType = SDL_FLIP_HORIZONTAL;
-	if (xVel > 0) flipType = SDL_FLIP_NONE;
-
-	if (yVel >= GRAVITY && !grounded) falling = true;
+	if (yVel > 0 && !grounded && !dead) falling = true;
 	else falling = false;
 
-	if (yVel <= 0) jumping = true;
+	if (yVel <= 0 && !dead) jumping = true;
 	else jumping = false;
 
-	//move x
-	x += xVel;
-	collision.x = getX() + PLAYER_WIDTH;
+	if (!beingHit) {
+		if (xVel < 0) flipType = SDL_FLIP_HORIZONTAL;
+		if (xVel > 0) flipType = SDL_FLIP_NONE;
+	}
 
-	if (getX() + PLAYER_WIDTH < 0) {
-		x = -PLAYER_WIDTH;
+	//move x
+	if (!dead) {
+		x += xVel;
 		collision.x = getX() + PLAYER_WIDTH;
-	}
-	if (getX() + 2*PLAYER_HEIGHT > LEVEL_WIDTH) {
-		x = LEVEL_WIDTH - 2*PLAYER_HEIGHT;
-		collision.x = x;
-	}
-	if (commonFunc::touchesWall(collision, tile)) {
-		x -= xVel;
-		collision.x = getX() + PLAYER_WIDTH;
+
+		if (getX() + PLAYER_WIDTH < 0) {
+			x = -PLAYER_WIDTH;
+			collision.x = getX() + PLAYER_WIDTH;
+		}
+		if (getX() + 2 * PLAYER_HEIGHT > LEVEL_WIDTH) {
+			x = LEVEL_WIDTH - 2 * PLAYER_HEIGHT;
+			collision.x = getX() + PLAYER_WIDTH;
+		}
+		if (commonFunc::touchesWall(collision, tile)) {
+			x -= xVel;
+			collision.x = getX() + PLAYER_WIDTH;
+		}
 	}
 
 	//move y
 	y += yVel;
-	int stt = 0;
 	collision.y = getY() + PLAYER_HEIGHT;
 	if (getY() + PLAYER_HEIGHT < 0) {
 		y = -PLAYER_HEIGHT;
 		collision.y = getY() + PLAYER_HEIGHT;
 	}
-	if (getY() + 2*PLAYER_HEIGHT > LEVEL_HEIGHT) {
-		y = LEVEL_HEIGHT - 2 * PLAYER_HEIGHT;
-		collision.y = getY() + PLAYER_HEIGHT;
-	}
-	if (commonFunc::touchesWall(collision, tile, stt)) {
+	if (commonFunc::touchesWall(collision, tile, groundSTT)) {
 		if (yVel > 0) {
-			y = tile[stt]->getY() - 64*2-0.25;
+			y = tile[groundSTT]->getY() - 64 * 2 - 0.1 + 2;
+			if (falling) {
+				grounded = true;
+			}
 		}
-		else y -= yVel;
+		else if (yVel < 0) {
+			y -= yVel;
+			yVel = 0;
+		}
 		collision.y = getY() + PLAYER_HEIGHT;
-		if (falling) {
-			grounded = true;
-		}
 	}
 	else grounded = false;
-
-	if (getY() >= LEVEL_HEIGHT - 64*2) {
-		y = 64 * 10;
-		x = 64 * 3;
-	}
 }
 
 void Player::jump() {
@@ -177,20 +160,32 @@ void Player::jump() {
 	}
 }
 
-//void Player::isGrounded(Tile* tile[]) {
-//	if (falling) {
-//		if (commonFunc::touchesWall(getCollision(), tile)) {
-//			grounded = true;
-//			falling = false;
-//			cout << "true" << endl;
-//		}
-//		else cout << "no touch wall" << endl;
-//	}
-//}
+void Player::gravity() {
+	if (!grounded) {
+		yVel += GRAVITY;
+		if (yVel > MAX_GRAVITY) yVel = MAX_GRAVITY;
+	}
+	else yVel = GRAVITY;
+}
+
+void Player::getHit(Skeleton& p_skeleton) {
+	if ((p_skeleton.getDistance() <= TILE_WIDTH * 1.5 && p_skeleton.isAttacking() && getY() >= p_skeleton.getY() - TILE_WIDTH && getY() <= p_skeleton.getY() + TILE_WIDTH * 0.5) || getY() >= LEVEL_HEIGHT) dead = true;
+}
+
+void Player::knockBack() {
+	if (beingHit) {
+		yVel += -4;
+		if (getFlipType() == SDL_FLIP_NONE) x += -100;
+		else if (getFlipType() == SDL_FLIP_HORIZONTAL) x += 10;
+	}
+}
 
 void Player::handleCamera(SDL_Rect& camera) {
-	//Di chuyển camera theo nhân vật
-	camera.x = (getX() + PLAYER_WIDTH / 2) - SCREEN_WIDTH / 2;
+	//Camera tự di chuyển theo x
+	//camera.x += 3;
+	//if (getX() + PLAYER_WIDTH / 2 - camera.x >= SCREEN_WIDTH * 2 / 3) {
+		camera.x = (getX() + PLAYER_WIDTH / 2) - SCREEN_WIDTH * 2 / 3;
+	//}
 	camera.y = (getY() + PLAYER_HEIGHT / 2) - SCREEN_HEIGHT / 2;
 
 	//Giới hạn 
@@ -214,7 +209,6 @@ void Player::render(SDL_Rect &p_camera) {
 		walkCounter++;
 		if (walkCounter/4 >= WALKING_ANIMATION_FRAMES) walkCounter = 0;
 	}
-	else walkCounter = 0;
 
 	if (idling) {
 		commonFunc::renderAnimation(tex, x, y, idlingClips[idleCounter/6], p_camera, 0, NULL, getFlipType());
@@ -224,9 +218,9 @@ void Player::render(SDL_Rect &p_camera) {
 	else idleCounter = 0;
 
 	if (jumping) {
-		commonFunc::renderAnimation(tex, x, y, jumpingClips[jumpCounter / 6], p_camera, 0, NULL, getFlipType());
+		commonFunc::renderAnimation(tex, x, y, jumpingClips[jumpCounter / 5], p_camera, 0, NULL, getFlipType());
 		jumpCounter++;
-		if (jumpCounter / 6 >= JUMPING_ANIMATION_FRAMES) jumpCounter = 0;
+		if (jumpCounter / 5 >= JUMPING_ANIMATION_FRAMES) jumpCounter = 0;
 	}
 	else jumpCounter = 0;
 

@@ -15,15 +15,30 @@ void Bullet::handelInput(SDL_Event& events) {
 
 }
 
-void Bullet::update() {
+void Bullet::update(Tile* tile[]) {
 	if (bulletCounter/delay < 3) {
 		xVel += BULLETSPEED;
-		if (flipType == SDL_FLIP_NONE) x += xVel;
-		else x -= xVel;
-		collision.x = x;
+
+		if (getFlipType() == SDL_FLIP_HORIZONTAL) x -= xVel;
+		else if (getFlipType() == SDL_FLIP_NONE) x += xVel;
+
+		collision.x = getX();
+
+		if (getX()< 0) {
+			x = 0;
+			collision.x = getX();
+		}
+		if (getX() + DEFAULTBULLET_W > LEVEL_WIDTH) {
+			x = LEVEL_WIDTH - DEFAULTBULLET_W;
+			collision.x = getX();
+		}
+		if (commonFunc::touchesWall(collision, tile)) {
+			if (getFlipType() == SDL_FLIP_HORIZONTAL) x += xVel;
+			else if (getFlipType() == SDL_FLIP_NONE) x -= xVel;
+			collision.x = getX();
+		}
 	}
 	if (bulletCounter/delay == BULLET_ANIMATION_FRAMES) setMove(false);
-	
 }
 
 void Bullet::setFlipType(SDL_RendererFlip p_PlayerflipType) {
@@ -36,7 +51,7 @@ void Bullet::setSize_Position(const int& p_width, const int& p_height, const int
 		x = p_playerX - (DEFAULTBULLET_W / 4);
 	}
 	collision.w = DEFAULTBULLET_W;
-	collision.h = DEFAULTBULLET_H;
+	collision.h = DEFAULTBULLET_H-2;
 }
 
 void Bullet::render(SDL_Rect &camera, SDL_Texture* p_tex) {
