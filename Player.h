@@ -24,26 +24,35 @@ private:
 	static const int IDLING_ANIMATION_FRAMES = 4;
 	static const int JUMPING_ANIMATION_FRAMES = 4;
 	static const int FALLING_ANIMATION_FRAMES = 4;
+	static const int DEATH_ANIMATION_FRAMES = 4;
 
 	SDL_Rect walkingClips[WALKING_ANIMATION_FRAMES];
 	SDL_Rect idlingClips[IDLING_ANIMATION_FRAMES];
 	SDL_Rect jumpingClips[JUMPING_ANIMATION_FRAMES];
 	SDL_Rect fallingClips[FALLING_ANIMATION_FRAMES];
-	int idleCounter = 0, walkCounter = 0, jumpCounter = 0, fallingCounter = 0;
+	SDL_Rect deathClips[DEATH_ANIMATION_FRAMES];
+	int idleCounter = 0, walkCounter = 0, jumpCounter = 0, fallingCounter = 0, deathCounter = 0;
 
 	bool grounded = false, running = false, idling = true, jumping = false, falling = false, dead = false, beingHit = false;
 	float xVel = 0, yVel = 0;
 	int groundSTT = 1; //số thứ tự của block đang đứng trên
 	SDL_Rect collision;
 	vector<Bullet*> bulletList;
+	Mix_Chunk* playerSFX[4];
 public:
 	Player(float p_x, float p_y, SDL_Texture* p_tex);
+	enum SFX {
+		hitSFX = 0,
+		jumpSFX = 1,
+		landSFX = 2,
+		shootSFX = 3,
+	};
 
-	void handleInput(SDL_Event &events);
-	void update(Tile *tile[], Skeleton& p_skeleton);
+	void handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]);
+	void update(Tile *tile[], vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]);
 	void jump();
 	void gravity();
-	void getHit(Skeleton& p_skeleton);
+	void getHit(vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]);
 	bool isDead() { return dead; }
 	void knockBack();
 	void handleCamera(SDL_Rect& camera);

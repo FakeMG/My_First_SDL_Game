@@ -1,5 +1,4 @@
 ﻿#pragma once
-#pragma once
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -33,20 +32,20 @@ private:
 	bool grounded = true, walking = false, idling = true, falling = false, attacking = false, beingHit = false, dead = false;
 
 	float xVel = 0, yVel = 0;
-	int maxHealth = 100;
+	int maxHealth = 3;
 	int groundSTT = 1; //số thứ tự của block đang đứng trên
 	float distanceToPlayer;
 	SDL_Rect collision;
 public:
 	Skeleton(float p_x, float p_y, SDL_Texture* p_tex);
 
-	void update(Player& p_playe, Tile* tile[]);
+	void update(Player& p_player, Tile* tile[], Mix_Chunk* p_sfx[]);
 	void gravity();
 	void autoMovement(Tile* tile[]);
 	void moveToPlayer(Player& p_player, Tile* tile[]);
 	bool isDead() { return dead; }
 	bool isAttacking();
-	void getHit(Player& p_player);
+	void getHit(Player& p_player, Mix_Chunk* p_sfx[]);
 	void knockBack();
 	void render(SDL_Rect& p_camera);
 

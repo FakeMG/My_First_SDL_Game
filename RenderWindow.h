@@ -49,7 +49,6 @@ static SDL_Renderer* renderer = NULL;
 static SDL_Surface* surface = NULL;
 
 
-
 namespace commonFunc {
 	//Window
 	void renderWindow(const char* p_title, int p_width, int p_height);

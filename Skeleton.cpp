@@ -38,13 +38,13 @@ Skeleton::Skeleton(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, 
 	}
 }
 
-void Skeleton::update(Player& p_player, Tile* tile[]) {
+void Skeleton::update(Player& p_player, Tile* tile[], Mix_Chunk* p_sfx[]) {
 	if (!beingHit) {
 		if (xVel < 0) flipType = SDL_FLIP_HORIZONTAL;
 		if (xVel > 0) flipType = SDL_FLIP_NONE;
 	}
 	gravity();
-	getHit(p_player);
+	getHit(p_player, p_sfx);
 	autoMovement(tile);
 	moveToPlayer(p_player, tile);
 	knockBack();
@@ -146,7 +146,7 @@ bool Skeleton::isAttacking() {
 	return false;
 }
 
-void Skeleton::getHit(Player& p_player) {
+void Skeleton::getHit(Player& p_player, Mix_Chunk* p_sfx[]) {
 	for (int i = 0; i < p_player.getBulletList().size(); i++) {
 		if (p_player.getBulletList().at(i) != NULL) {
 			if (commonFunc::checkCollision(p_player.getBulletList().at(i)->getCollision(), getCollision())) {
@@ -158,11 +158,17 @@ void Skeleton::getHit(Player& p_player) {
 			}
 		}
 	}
+	if (beingHit && beingHitCounter == 0) Mix_PlayChannel(-1, p_sfx[1], 0);
+
 	if (beingHitCounter / 7 >= BEINGHIT_ANIMATION_FRAMES) {
 		beingHit = false;
 		beingHitCounter = 0;
 	}
-	if (maxHealth <= 0) dead = true;
+	if (maxHealth <= 0 || getY() + SKELETON_HEIGHT/2 > LEVEL_HEIGHT) {
+		dead = true;
+		beingHit = false;
+		Mix_PlayChannel(-1, p_sfx[0], 0);
+	}
 }
 
 void Skeleton::knockBack() {

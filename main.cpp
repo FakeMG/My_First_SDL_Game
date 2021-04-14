@@ -21,6 +21,11 @@ SDL_Texture* skeletonTex = NULL;
 SDL_Texture* tileTex = NULL;
 SDL_Texture* bulletTex = NULL;
 
+Mix_Music* bgMusic = NULL;
+
+Mix_Chunk* playerSFX[4];
+Mix_Chunk* skeletonSFX[2];
+
 SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
 //FPScounter
@@ -41,23 +46,39 @@ bool setTiles(Tile* tiles[]);
 int main(int argc, char* argv[]) {
     if (!init()) return 0;
     else {
-        if (!loadMedia()) return 0;
+        if (!loadMedia()) cout << "FAILED TO LOAD MEDIA!" << endl;
         else {
-            Player knight(64*3, LEVEL_HEIGHT - TILE_HEIGHT * 3, FakeMG);
-            Skeleton test(64 * 18, LEVEL_HEIGHT - TILE_HEIGHT * 9, skeletonTex);
             if (!setTiles(tileSet)) {
-                printf("Failed to load tile set!\n");
+                cout << "FAILED TO LOAD TILE SET!" << endl;
             }
-            
+            Player knight(64 * 3, LEVEL_HEIGHT - TILE_HEIGHT * 3, FakeMG);
+            vector<Skeleton*> skeletonList;
+            Skeleton* ske1 = new Skeleton(TILE_WIDTH * 18, LEVEL_HEIGHT - TILE_HEIGHT * 9, skeletonTex);
+            skeletonList.push_back(ske1);
+            Skeleton* ske2 = new Skeleton(TILE_WIDTH * 63, LEVEL_HEIGHT - TILE_HEIGHT * 12, skeletonTex);
+            skeletonList.push_back(ske2);
+            Skeleton* ske3 = new Skeleton(TILE_WIDTH * 72, LEVEL_HEIGHT - TILE_HEIGHT * 7, skeletonTex);
+            skeletonList.push_back(ske3);
+            Skeleton* ske4 = new Skeleton(TILE_WIDTH * 82, LEVEL_HEIGHT - TILE_HEIGHT * 7, skeletonTex);
+            skeletonList.push_back(ske4);
+            Skeleton* ske5 = new Skeleton(TILE_WIDTH * 89, LEVEL_HEIGHT - TILE_HEIGHT * 6, skeletonTex);
+            skeletonList.push_back(ske5);
+            Skeleton* ske6 = new Skeleton(TILE_WIDTH * 96, LEVEL_HEIGHT - TILE_HEIGHT * 5, skeletonTex);
+            skeletonList.push_back(ske6);
+            Skeleton* ske7 = new Skeleton(TILE_WIDTH * 133, LEVEL_HEIGHT - TILE_HEIGHT * 12, skeletonTex);
+            skeletonList.push_back(ske7);
+
             //Game loop
             fpsTimer.start(); //bắt đầu đếm time
-            
+            Mix_PlayMusic(bgMusic, -1);
+            Mix_VolumeMusic(50);
+
             while (gameRunning) {
                 while (SDL_PollEvent(&event)) {
                     if (event.type == SDL_QUIT) gameRunning = false;
-                    knight.handleInput(event);
+                    knight.handleInput(event, playerSFX);
                 }
-
+                
                 commonFunc::clearRenderer();
 
                 //render tile
@@ -66,8 +87,8 @@ int main(int argc, char* argv[]) {
                 }
 
                 //render bullet
+                vector<Bullet*> bulletList = knight.getBulletList();
                 for (int i = 0; i < knight.getBulletList().size(); i++) {
-                    vector<Bullet*> bulletList = knight.getBulletList();
                     if (bulletList.at(i) != NULL) {
                         if (bulletList.at(i)->isMoving()) {
                             bulletList.at(i)->render(camera, bulletTex);
@@ -83,12 +104,24 @@ int main(int argc, char* argv[]) {
                 }
 
                 //render player
-                knight.update(tileSet, test);
+                knight.update(tileSet, skeletonList, playerSFX);
                 knight.handleCamera(camera);
                 knight.render(camera);
 
-                test.update(knight, tileSet);
-                test.render(camera);
+                //render skeleton
+                for (int i = 0; i < skeletonList.size(); i++) {
+                    if (skeletonList.at(i) != NULL) {
+                        if (!skeletonList.at(i)->isDead()) {
+                            skeletonList.at(i)->render(camera);
+                            skeletonList.at(i)->update(knight, tileSet, skeletonSFX);
+                        }
+                        else {
+                            delete skeletonList.at(i);
+                            skeletonList.at(i) = NULL;
+                            skeletonList.erase(skeletonList.begin() + i);
+                        }
+                    }
+                }
 
                 FPSCounter();
                 commonFunc::renderPresent();
@@ -96,7 +129,6 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    //Giải phóng bộ nhớ
     commonFunc::cleanUp();
     return 0;
 }
@@ -119,8 +151,12 @@ bool init() {
         cout << "TTF_Init HAS FAILED. SDL_ERROR: " << TTF_GetError() << endl;
         success = false;
     }
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        cout << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << endl;
+        success = false;
+    }
 
-    if (success == true) commonFunc::renderWindow("Test Game", SCREEN_WIDTH, SCREEN_HEIGHT);
+    if (success == true) commonFunc::renderWindow("Escape the Dungeon", SCREEN_WIDTH, SCREEN_HEIGHT);
 
     return success;
 }
@@ -128,17 +164,38 @@ bool loadMedia() {
     bool success = true;
     if (!commonFunc::loadFont("res/lazy.ttf")) success = false;
 
-    FakeMG = commonFunc::loadTexture("res/gtx/Metal knight.png");
+    FakeMG = commonFunc::loadTexture("res/texture/Metal knight.png");
     if (FakeMG == NULL) success = false;
 
-    tileTex = commonFunc::loadTexture("res/gtx/Tileset.png");
+    tileTex = commonFunc::loadTexture("res/texture/Tileset.png");
     if (tileTex == NULL) success = false;
 
-    bulletTex = commonFunc::loadTexture("res/gtx/Bullet.png");
+    bulletTex = commonFunc::loadTexture("res/texture/Bullet.png");
     if (bulletTex == NULL) success = false;
 
-    skeletonTex = commonFunc::loadTexture("res/gtx/Skeleton.png");
+    skeletonTex = commonFunc::loadTexture("res/texture/Skeleton.png");
     if (skeletonTex == NULL) success = false;
+
+    bgMusic = Mix_LoadMUS("res/sfx/Vault in Tower Fortress Soundtrack.mp3");
+    if (bgMusic == NULL) success = false;
+
+    playerSFX[0] = Mix_LoadWAV("res/sfx/sfx_sounds_impact12 (hit).wav"); // hit
+    if (playerSFX[0] == NULL) success = false;
+
+    playerSFX[1] = Mix_LoadWAV("res/sfx/sfx_movement_jump1.wav"); //jumping
+    if (playerSFX[1] == NULL) success = false;
+
+    playerSFX[2] = Mix_LoadWAV("res/sfx/sfx_sounds_impact1 (landing).wav"); //landing
+    if (playerSFX[2] == NULL) success = false;
+
+    playerSFX[3] = Mix_LoadWAV("res/sfx/sfx_wpn_laser7.wav"); //shooting
+    if (playerSFX[3] == NULL) success = false;
+
+    skeletonSFX[0] = Mix_LoadWAV("res/sfx/sfx_exp_short_hard16.wav"); //died
+    if (skeletonSFX[0] == NULL) success = false;
+
+    skeletonSFX[1] = Mix_LoadWAV("res/sfx/sfx_damage_hit2.wav"); //hit
+    if (skeletonSFX[1] == NULL) success = false;
 
     return success;
 }
@@ -164,7 +221,7 @@ bool setTiles(Tile* tiles[]) {
     int x = 0, y = 0;
 
     //Mở map
-    ifstream map("res/gtx/map.map");
+    ifstream map("res/texture/map.map");
 
     //Nếu ko đọc đc dữ liệu trong map
     if (map.fail()) {

@@ -6,37 +6,44 @@ Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 	collision.w = PLAYER_WIDTH-12; //cho vừa với chân nhân vật
 	collision.h = PLAYER_HEIGHT-2; //cho nhân vật vừa trong 1 ô
 
+
 	for (int i = 0; i < WALKING_ANIMATION_FRAMES; i++) {
 		walkingClips[i].x = i * (getCurrentFrame().w/4);
 		if (i >= 4) {
 			walkingClips[i].x = (i-4) * (getCurrentFrame().w/4);
-			walkingClips[i].y = (getCurrentFrame().h/5)*2;
+			walkingClips[i].y = (getCurrentFrame().h/6)*2;
 		}
-		else walkingClips[i].y = getCurrentFrame().h/5;
+		else walkingClips[i].y = getCurrentFrame().h/6;
 		walkingClips[i].w = getCurrentFrame().w/4;
-		walkingClips[i].h = getCurrentFrame().h/5;
+		walkingClips[i].h = getCurrentFrame().h/6;
 	}
 	for (int i = 0; i < IDLING_ANIMATION_FRAMES; i++) {
 		idlingClips[i].x = i * (getCurrentFrame().w/4);
 		idlingClips[i].y = 0;
 		idlingClips[i].w = getCurrentFrame().w/4;
-		idlingClips[i].h = getCurrentFrame().h/5;
+		idlingClips[i].h = getCurrentFrame().h/6;
 	}
 	for (int i = 0; i < JUMPING_ANIMATION_FRAMES; i++) {
 		jumpingClips[i].x = i * (getCurrentFrame().w / 4);
-		jumpingClips[i].y = (getCurrentFrame().h/5) * 3;
+		jumpingClips[i].y = (getCurrentFrame().h/6) * 3;
 		jumpingClips[i].w = getCurrentFrame().w / 4;
-		jumpingClips[i].h = getCurrentFrame().h / 5;
+		jumpingClips[i].h = getCurrentFrame().h / 6;
 	}
 	for (int i = 0; i < FALLING_ANIMATION_FRAMES; i++) {
 		fallingClips[i].x = i * (getCurrentFrame().w / 4);
-		fallingClips[i].y = (getCurrentFrame().h / 5) * 4;
+		fallingClips[i].y = (getCurrentFrame().h / 6) * 4;
 		fallingClips[i].w = getCurrentFrame().w / 4;
-		fallingClips[i].h = getCurrentFrame().h / 5;
+		fallingClips[i].h = getCurrentFrame().h / 6;
+	}
+	for (int i = 0; i < DEATH_ANIMATION_FRAMES; i++) {
+		deathClips[i].x = i * (getCurrentFrame().w / 4);
+		deathClips[i].y = (getCurrentFrame().h / 6) * 5;
+		deathClips[i].w = getCurrentFrame().w / 4;
+		deathClips[i].h = getCurrentFrame().h / 6;
 	}
 }
 
-void Player::handleInput(SDL_Event &events) {
+void Player::handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]) {
 	if (!dead) {
 		if (events.type == SDL_KEYDOWN && events.key.repeat == 0) {
 			switch (events.key.keysym.sym) {
@@ -49,6 +56,7 @@ void Player::handleInput(SDL_Event &events) {
 			case SDLK_SPACE:
 				if (grounded) {
 					jump();
+					Mix_PlayChannel(-1, p_sfx[jumpSFX], 0);
 				}
 				break;
 			default:
@@ -75,6 +83,7 @@ void Player::handleInput(SDL_Event &events) {
 		else if (events.type == SDL_MOUSEBUTTONDOWN && events.key.repeat == 0) {
 			Bullet* bullet = new Bullet(getCollision().x + PLAYER_WIDTH * 1.25, getCollision().y, NULL);
 			if (events.button.button == SDL_BUTTON_LEFT) {
+				Mix_PlayChannel(-1, p_sfx[shootSFX], 0);
 				bullet->setFlipType(getFlipType());
 				bullet->setSize_Position(DEFAULTBULLET_W, DEFAULTBULLET_H, getX());
 				bullet->setType(Bullet::NORMAL);
@@ -88,9 +97,9 @@ void Player::handleInput(SDL_Event &events) {
 	}
 }
 
-void Player::update(Tile* tile[], Skeleton &p_skeleton) {
+void Player::update(Tile* tile[], vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]) {
 	gravity();
-	getHit(p_skeleton);
+	if(!dead) getHit(skeletonList, p_sfx);
 	//knockBack();
 
 	// set trạng thái Player
@@ -142,6 +151,7 @@ void Player::update(Tile* tile[], Skeleton &p_skeleton) {
 			y = tile[groundSTT]->getY() - 64 * 2 - 0.1 + 2;
 			if (falling) {
 				grounded = true;
+				Mix_PlayChannel(-1, p_sfx[landSFX], 0);
 			}
 		}
 		else if (yVel < 0) {
@@ -168,8 +178,18 @@ void Player::gravity() {
 	else yVel = GRAVITY;
 }
 
-void Player::getHit(Skeleton& p_skeleton) {
-	if ((p_skeleton.getDistance() <= TILE_WIDTH * 1.5 && p_skeleton.isAttacking() && getY() >= p_skeleton.getY() - TILE_WIDTH && getY() <= p_skeleton.getY() + TILE_WIDTH * 0.5) || getY() >= LEVEL_HEIGHT) dead = true;
+void Player::getHit(vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]) {
+	for (int i = 0; i < skeletonList.size(); i++) {
+		if(skeletonList.at(i) != NULL)
+			if ((skeletonList.at(i)->getDistance() <= TILE_WIDTH * 1.5 && skeletonList.at(i)->isAttacking() && getY() >= skeletonList.at(i)->getY() - TILE_WIDTH && getY() <= skeletonList.at(i)->getY() + TILE_WIDTH * 0.5)) {
+				dead = true;
+				Mix_PlayChannel(-1, p_sfx[hitSFX], 0);
+			}
+	}
+	if (getY() + PLAYER_HEIGHT >= LEVEL_HEIGHT) {
+		dead = true;
+		Mix_PlayChannel(-1, p_sfx[hitSFX], 0);
+	}
 }
 
 void Player::knockBack() {
@@ -182,10 +202,10 @@ void Player::knockBack() {
 
 void Player::handleCamera(SDL_Rect& camera) {
 	//Camera tự di chuyển theo x
-	//camera.x += 3;
-	//if (getX() + PLAYER_WIDTH / 2 - camera.x >= SCREEN_WIDTH * 2 / 3) {
+	if(!isDead()) camera.x += 2.5;
+	if (getX() + PLAYER_WIDTH / 2 - camera.x >= SCREEN_WIDTH * 2 / 3) {
 		camera.x = (getX() + PLAYER_WIDTH / 2) - SCREEN_WIDTH * 2 / 3;
-	//}
+	}
 	camera.y = (getY() + PLAYER_HEIGHT / 2) - SCREEN_HEIGHT / 2;
 
 	//Giới hạn 
@@ -230,4 +250,10 @@ void Player::render(SDL_Rect &p_camera) {
 		if (fallingCounter / 4 >= FALLING_ANIMATION_FRAMES) fallingCounter = 0;
 	}
 	else fallingCounter = 0;
+
+	if (dead) {
+		commonFunc::renderAnimation(tex, x, y, deathClips[deathCounter / 4], p_camera, 0, NULL, getFlipType());
+		if(deathCounter/4 < DEATH_ANIMATION_FRAMES-1) deathCounter++;
+	}
+	else deathCounter = 0;
 }
