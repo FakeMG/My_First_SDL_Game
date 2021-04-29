@@ -39,13 +39,13 @@ private:
 public:
 	Skeleton(float p_x, float p_y, SDL_Texture* p_tex);
 
-	void update(Player& p_player, Tile* tile[], Mix_Chunk* p_sfx[]);
+	void update(Player& p_player, Tile* tile[], Mix_Chunk* p_sfx[], SDL_Rect& camera);
 	void gravity();
 	void autoMovement(Tile* tile[]);
 	void moveToPlayer(Player& p_player, Tile* tile[]);
 	bool isDead() { return dead; }
 	bool isAttacking();
-	void getHit(Player& p_player, Mix_Chunk* p_sfx[]);
+	void getHit(Player& p_player, Mix_Chunk* p_sfx[], SDL_Rect& camera);
 	void knockBack();
 	void render(SDL_Rect& p_camera);
 

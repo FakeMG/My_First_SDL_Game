@@ -47,6 +47,22 @@ void commonFunc::renderTexture(Entity& entity, SDL_Rect *rec, SDL_Rect *camera, 
 	SDL_RenderCopyEx(renderer, entity.getTex(), rec, &dst, angle, center, flip);
 }
 
+void commonFunc::renderTexture(SDL_Texture* p_tex, float p_x, float p_y, float p_w, float p_h, SDL_Rect* rec, SDL_Rect* camera, double angle, SDL_Point* center, SDL_RendererFlip flip) {
+	//mặc định là in toàn bộ texture ra
+	SDL_Rect dst = { p_x, p_y, p_w, p_h };
+
+	//nếu đầu vào rec != NULL thì in ra theo rec
+	if (rec != NULL) {
+		dst.w = rec->w;
+		dst.h = rec->h;
+	}
+	if (camera != NULL) {
+		dst.x = dst.x - camera->x;
+		dst.y = dst.y - camera->y;
+	}
+	SDL_RenderCopyEx(renderer, p_tex, rec, &dst, angle, center, flip);
+}
+
 void commonFunc::renderTile(Entity& entity, SDL_Rect& rec, SDL_Rect& camera) {
 	SDL_Rect dst = { entity.getX() - camera.x, entity.getY() - camera.y, rec.w, rec.h };
 	SDL_RenderCopy(renderer, entity.getTex(), &rec, &dst);

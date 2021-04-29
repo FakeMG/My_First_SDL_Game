@@ -44,7 +44,7 @@ Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 }
 
 void Player::handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]) {
-	if (!dead) {
+	if (!isDead() && !Won()) {
 		if (events.type == SDL_KEYDOWN && events.key.repeat == 0) {
 			switch (events.key.keysym.sym) {
 			case SDLK_a:
@@ -81,15 +81,16 @@ void Player::handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]) {
 			}
 		}
 		else if (events.type == SDL_MOUSEBUTTONDOWN && events.key.repeat == 0) {
-			Bullet* bullet = new Bullet(getCollision().x + PLAYER_WIDTH * 1.25, getCollision().y, NULL);
 			if (events.button.button == SDL_BUTTON_LEFT) {
+				Bullet* bullet = new Bullet(getCollision().x + PLAYER_WIDTH * 1.25, getCollision().y, NULL);
 				Mix_PlayChannel(-1, p_sfx[shootSFX], 0);
 				bullet->setFlipType(getFlipType());
 				bullet->setSize_Position(DEFAULTBULLET_W, DEFAULTBULLET_H, getX());
 				bullet->setType(Bullet::NORMAL);
+				bullet->setMove(true);
+				bulletList.push_back(bullet);
 			}
-			bullet->setMove(true);
-			bulletList.push_back(bullet);
+			
 		}
 		else if (events.type == SDL_MOUSEBUTTONUP && events.key.repeat == 0) {
 			//chua biet lam gi
@@ -97,9 +98,9 @@ void Player::handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]) {
 	}
 }
 
-void Player::update(Tile* tile[], vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]) {
+void Player::update(Tile* tile[], vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera) {
 	gravity();
-	if(!dead) getHit(skeletonList, p_sfx);
+	if(!dead) getHit(skeletonList, p_sfx, camera);
 	//knockBack();
 
 	// set trạng thái Player
@@ -130,6 +131,7 @@ void Player::update(Tile* tile[], vector<Skeleton*> skeletonList, Mix_Chunk* p_s
 			collision.x = getX() + PLAYER_WIDTH;
 		}
 		if (getX() + 2 * PLAYER_HEIGHT > LEVEL_WIDTH) {
+			won = true;
 			x = LEVEL_WIDTH - 2 * PLAYER_HEIGHT;
 			collision.x = getX() + PLAYER_WIDTH;
 		}
@@ -178,7 +180,7 @@ void Player::gravity() {
 	else yVel = GRAVITY;
 }
 
-void Player::getHit(vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]) {
+void Player::getHit(vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera) {
 	for (int i = 0; i < skeletonList.size(); i++) {
 		if(skeletonList.at(i) != NULL)
 			if ((skeletonList.at(i)->getDistance() <= TILE_WIDTH * 1.5 && skeletonList.at(i)->isAttacking() && getY() >= skeletonList.at(i)->getY() - TILE_WIDTH && getY() <= skeletonList.at(i)->getY() + TILE_WIDTH * 0.5)) {
@@ -186,7 +188,7 @@ void Player::getHit(vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]) {
 				Mix_PlayChannel(-1, p_sfx[hitSFX], 0);
 			}
 	}
-	if (getY() + PLAYER_HEIGHT >= LEVEL_HEIGHT) {
+	if (getY() + PLAYER_HEIGHT >= LEVEL_HEIGHT || getX() - camera.x < 192 - 2*64) {
 		dead = true;
 		Mix_PlayChannel(-1, p_sfx[hitSFX], 0);
 	}
@@ -200,9 +202,13 @@ void Player::knockBack() {
 	}
 }
 
-void Player::handleCamera(SDL_Rect& camera) {
+void Player::handleCamera(SDL_Rect& camera, float& camVel) {
 	//Camera tự di chuyển theo x
-	if(!isDead()) camera.x += 2.5;
+
+	if(!isDead()) camera.x += camVel;
+	camVel += 0.003;
+	if (camVel > 4.5) camVel = 4.5;
+
 	if (getX() + PLAYER_WIDTH / 2 - camera.x >= SCREEN_WIDTH * 2 / 3) {
 		camera.x = (getX() + PLAYER_WIDTH / 2) - SCREEN_WIDTH * 2 / 3;
 	}
@@ -252,8 +258,8 @@ void Player::render(SDL_Rect &p_camera) {
 	else fallingCounter = 0;
 
 	if (dead) {
-		commonFunc::renderAnimation(tex, x, y, deathClips[deathCounter / 4], p_camera, 0, NULL, getFlipType());
-		if(deathCounter/4 < DEATH_ANIMATION_FRAMES-1) deathCounter++;
+		commonFunc::renderAnimation(tex, x, y, deathClips[deathCounter / 5], p_camera, 0, NULL, getFlipType());
+		if(deathCounter / 5 < DEATH_ANIMATION_FRAMES-1) deathCounter++;
 	}
 	else deathCounter = 0;
 }

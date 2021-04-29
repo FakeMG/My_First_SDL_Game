@@ -33,7 +33,7 @@ private:
 	SDL_Rect deathClips[DEATH_ANIMATION_FRAMES];
 	int idleCounter = 0, walkCounter = 0, jumpCounter = 0, fallingCounter = 0, deathCounter = 0;
 
-	bool grounded = false, running = false, idling = true, jumping = false, falling = false, dead = false, beingHit = false;
+	bool grounded = false, running = false, idling = true, jumping = false, falling = false, dead = false, beingHit = false, won = false;
 	float xVel = 0, yVel = 0;
 	int groundSTT = 1; //số thứ tự của block đang đứng trên
 	SDL_Rect collision;
@@ -49,14 +49,23 @@ public:
 	};
 
 	void handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]);
-	void update(Tile *tile[], vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]);
+	void update(Tile *tile[], vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera);
 	void jump();
 	void gravity();
-	void getHit(vector<Skeleton*> skeletonList, Mix_Chunk* p_sfx[]);
+	void getHit(vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera);
 	bool isDead() { return dead; }
+	bool Won() { return won; }
 	void knockBack();
-	void handleCamera(SDL_Rect& camera);
+	void handleCamera(SDL_Rect& camera, float& camVel);
 	void render(SDL_Rect& p_camera);
+	void resetPlayer() {
+		x = 64 * 3; 
+		y = LEVEL_HEIGHT - TILE_HEIGHT * 4;
+		xVel = 0;
+		yVel = 0;
+		won = false;
+		dead = false;
+	}
 	void setBulletList(vector<Bullet*> bulletList) { this->bulletList = bulletList; }
 
 	//getter
