@@ -11,11 +11,7 @@ Bullet::Bullet(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 	}
 }
 
-void Bullet::handelInput(SDL_Event& events) {
-
-}
-
-void Bullet::update(Tile* tile[]) {
+void Bullet::update(vector<LevelPart>& LevelPartList) {
 	if (bulletCounter/delay < 3) {
 		xVel += BULLETSPEED;
 
@@ -28,11 +24,11 @@ void Bullet::update(Tile* tile[]) {
 			x = 0;
 			collision.x = getX();
 		}
-		if (getX() + DEFAULTBULLET_W > LEVEL_WIDTH) {
+		/*if (getX() + DEFAULTBULLET_W > LEVEL_WIDTH) {
 			x = LEVEL_WIDTH - DEFAULTBULLET_W;
 			collision.x = getX();
-		}
-		if (commonFunc::touchesWall(collision, tile)) {
+		}*/
+		if (commonFunc::touchesWall(collision, LevelPartList)) {
 			if (getFlipType() == SDL_FLIP_HORIZONTAL) x += xVel;
 			else if (getFlipType() == SDL_FLIP_NONE) x -= xVel;
 			collision.x = getX();

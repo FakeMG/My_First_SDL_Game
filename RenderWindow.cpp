@@ -1,12 +1,4 @@
-﻿#include <iostream>
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
-#include <SDL_mixer.h>
-#include <sstream>
-
-#include "RenderWindow.h"
-#include "Entity.h"
+﻿#include "RenderWindow.h"
 using namespace std;
 
 void commonFunc::renderWindow(const char* p_title, int p_width, int p_height) {
@@ -126,12 +118,28 @@ bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[]) {
 	return false;
 }
 
-bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[], int &stt) {
-	for (int i = 0; i < TOTAL_TILES; ++i) {
-		if ((tiles[i]->getType() >= 0) && (tiles[i]->getType() <= 84)) {
-			if (checkCollision(box, tiles[i]->getCollision())) {
-				stt = i;
-				return true;
+bool commonFunc::touchesWall(SDL_Rect box, vector<LevelPart>& LevelPartList) {
+	for (int i = 0; i < LevelPartList.size(); i++) {
+		for (int j = 0; j < LevelPartList.at(i).getTilesList().size(); ++j) {
+			if ((LevelPartList.at(i).getTilesList().at(j)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(j)->getType() <= 84)) {
+				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(j)->getCollision())) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+bool commonFunc::touchesWall(SDL_Rect box, vector<LevelPart>& LevelPartList, int &groundSTT, int& levelSTT) {
+	for (int i = 0; i < LevelPartList.size(); i++) {
+		for (int j = 0; j < LevelPartList.at(i).getTilesList().size(); ++j) {
+			if ((LevelPartList.at(i).getTilesList().at(j)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(j)->getType() <= 84)) {
+				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(j)->getCollision())) {
+					levelSTT = i;
+					groundSTT = j;
+					return true;
+				}
 			}
 		}
 	}

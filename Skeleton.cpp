@@ -38,15 +38,15 @@ Skeleton::Skeleton(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, 
 	}
 }
 
-void Skeleton::update(Player& p_player, Tile* tile[], Mix_Chunk* p_sfx[], SDL_Rect& camera) {
+void Skeleton::update(Player& p_player, vector<LevelPart>& LevelPartList, Mix_Chunk* p_sfx[], SDL_Rect& camera) {
 	if (!beingHit) {
 		if (xVel < 0) flipType = SDL_FLIP_HORIZONTAL;
 		if (xVel > 0) flipType = SDL_FLIP_NONE;
 	}
 	gravity();
 	getHit(p_player, p_sfx, camera);
-	autoMovement(tile);
-	moveToPlayer(p_player, tile);
+	autoMovement(LevelPartList);
+	moveToPlayer(p_player, LevelPartList);
 	knockBack();
 	
 	//update trạng thái Skeleton
@@ -69,12 +69,12 @@ void Skeleton::update(Player& p_player, Tile* tile[], Mix_Chunk* p_sfx[], SDL_Re
 			collision.x = getX() + SKELETON_WIDTH;
 			xVel *= -1;
 		}
-		if (getX() + 2 * SKELETON_HEIGHT > LEVEL_WIDTH) {
+		/*if (getX() + 2 * SKELETON_HEIGHT > LEVEL_WIDTH) {
 			x = LEVEL_WIDTH - 2 * SKELETON_HEIGHT;
 			collision.x = getX() + SKELETON_WIDTH;
 			xVel *= -1;
-		}
-		if (commonFunc::touchesWall(collision, tile)) {
+		}*/
+		if (commonFunc::touchesWall(collision, LevelPartList)) {
 			x -= xVel;
 			collision.x = getX() + SKELETON_WIDTH;
 			xVel *= -1;
@@ -88,9 +88,9 @@ void Skeleton::update(Player& p_player, Tile* tile[], Mix_Chunk* p_sfx[], SDL_Re
 		y = -SKELETON_HEIGHT;
 		collision.y = getY() + SKELETON_HEIGHT;
 	}
-	if (commonFunc::touchesWall(collision, tile, groundSTT)) {
+	if (commonFunc::touchesWall(collision, LevelPartList, groundSTT, levelSTT)) {
 		if (yVel > 0) {
-			y = tile[groundSTT]->getY() - 64 * 2 - 0.1 + 2;
+			y = LevelPartList.at(levelSTT).getTilesList().at(groundSTT)->getY() - 64 * 2 - 0.1 + 2;
 			if (falling) {
 				grounded = true;
 			}
@@ -113,16 +113,16 @@ void Skeleton::gravity() {
 	else yVel = GRAVITY;
 }
 
-void Skeleton::moveToPlayer(Player& p_player, Tile* tile[]) {
+void Skeleton::moveToPlayer(Player& p_player, vector<LevelPart>& LevelPartList) {
 	distanceToPlayer = sqrt(pow(p_player.getX() - getX(), 2) + pow(p_player.getY() - getY(), 2));
 	if (!beingHit) {
 		//trong tầm nhìn của skeleton
 		if ((p_player.getY() >= getY() - TILE_WIDTH && p_player.getY() <= getY() + TILE_WIDTH * 0.5) && distanceToPlayer <= TILE_WIDTH * 7) {
 			if (p_player.getX() - getX() < 0) {
-				if (tile[groundSTT - 1]->getType() > 84) xVel = 0;
+				if (LevelPartList.at(levelSTT).getTilesList().at(groundSTT - 1)->getType() > 84) xVel = 0;
 				else xVel = -SKELETON_VEL;
 			}
-			else if (tile[groundSTT + 1]->getType() > 84) xVel = 0;
+			else if (LevelPartList.at(levelSTT).getTilesList().at(groundSTT + 1)->getType() > 84) xVel = 0;
 			else xVel = SKELETON_VEL;
 		}
 	}
@@ -130,12 +130,12 @@ void Skeleton::moveToPlayer(Player& p_player, Tile* tile[]) {
 	else attacking = false;
 }
 
-void Skeleton::autoMovement(Tile* tile[]) {
+void Skeleton::autoMovement(vector<LevelPart>& LevelPartList) {
 	if (grounded && !beingHit) {
-		if (tile[groundSTT + 1]->getType() > 84 && tile[groundSTT - 2]->getType() > 84) xVel = 0;
-		else if (tile[groundSTT + 1]->getType() > 84 && xVel > 0) xVel = -SKELETON_VEL * 0.5;
-		else if (tile[groundSTT - 1]->getType() > 84 && xVel < 0) xVel = SKELETON_VEL * 0.5;
-		else if (tile[groundSTT + 2]->getType() > 84 && tile[groundSTT - 2]->getType() > 84) xVel = 0;
+		if (LevelPartList.at(levelSTT).getTilesList().at(groundSTT + 1)->getType() > 84 && LevelPartList.at(levelSTT).getTilesList().at(groundSTT - 2)->getType() > 84) xVel = 0;
+		else if (LevelPartList.at(levelSTT).getTilesList().at(groundSTT + 1)->getType() > 84 && xVel > 0) xVel = -SKELETON_VEL * 0.5;
+		else if (LevelPartList.at(levelSTT).getTilesList().at(groundSTT - 1)->getType() > 84 && xVel < 0) xVel = SKELETON_VEL * 0.5;
+		else if (LevelPartList.at(levelSTT).getTilesList().at(groundSTT + 2)->getType() > 84 && LevelPartList.at(levelSTT).getTilesList().at(groundSTT - 2)->getType() > 84) xVel = 0;
 		else if(getFlipType() == SDL_FLIP_NONE) xVel = SKELETON_VEL * 0.5;
 		else if(getFlipType() == SDL_FLIP_HORIZONTAL) xVel = -SKELETON_VEL * 0.5;
 	}

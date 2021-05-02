@@ -44,7 +44,7 @@ Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 }
 
 void Player::handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]) {
-	if (!isDead() && !Won()) {
+	if (!isDead()) {
 		if (events.type == SDL_KEYDOWN && events.key.repeat == 0) {
 			switch (events.key.keysym.sym) {
 			case SDLK_a:
@@ -98,7 +98,7 @@ void Player::handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]) {
 	}
 }
 
-void Player::update(Tile* tile[], vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera) {
+void Player::update(vector<LevelPart>& LevelPartList, vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera) {
 	gravity();
 	if(!dead) getHit(skeletonList, p_sfx, camera);
 	//knockBack();
@@ -130,12 +130,7 @@ void Player::update(Tile* tile[], vector<Skeleton*> &skeletonList, Mix_Chunk* p_
 			x = -PLAYER_WIDTH;
 			collision.x = getX() + PLAYER_WIDTH;
 		}
-		if (getX() + 2 * PLAYER_HEIGHT > LEVEL_WIDTH) {
-			won = true;
-			x = LEVEL_WIDTH - 2 * PLAYER_HEIGHT;
-			collision.x = getX() + PLAYER_WIDTH;
-		}
-		if (commonFunc::touchesWall(collision, tile)) {
+		if (commonFunc::touchesWall(collision, LevelPartList)) {
 			x -= xVel;
 			collision.x = getX() + PLAYER_WIDTH;
 		}
@@ -148,9 +143,9 @@ void Player::update(Tile* tile[], vector<Skeleton*> &skeletonList, Mix_Chunk* p_
 		y = -PLAYER_HEIGHT;
 		collision.y = getY() + PLAYER_HEIGHT;
 	}
-	if (commonFunc::touchesWall(collision, tile, groundSTT)) {
+	if (commonFunc::touchesWall(collision, LevelPartList, groundSTT, levelSTT)) {
 		if (yVel > 0) {
-			y = tile[groundSTT]->getY() - 64 * 2 - 0.1 + 2;
+			y = LevelPartList.at(levelSTT).getTilesList().at(groundSTT)->getY() - 64 * 2 - 0.1 + 2;
 			if (falling) {
 				grounded = true;
 				Mix_PlayChannel(-1, p_sfx[landSFX], 0);
@@ -188,7 +183,7 @@ void Player::getHit(vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rec
 				Mix_PlayChannel(-1, p_sfx[hitSFX], 0);
 			}
 	}
-	if (getY() + PLAYER_HEIGHT >= LEVEL_HEIGHT || getX() - camera.x < 192 - 2*64) {
+	if (getY() + PLAYER_HEIGHT >= LEVEL_HEIGHT || getX() - camera.x <= 192 - 2*64) {
 		dead = true;
 		Mix_PlayChannel(-1, p_sfx[hitSFX], 0);
 	}
@@ -204,7 +199,6 @@ void Player::knockBack() {
 
 void Player::handleCamera(SDL_Rect& camera, float& camVel) {
 	//Camera tự di chuyển theo x
-
 	if(!isDead()) camera.x += camVel;
 	camVel += 0.003;
 	if (camVel > 4.5) camVel = 4.5;
@@ -221,9 +215,9 @@ void Player::handleCamera(SDL_Rect& camera, float& camVel) {
 	if (camera.y < 0) {
 		camera.y = 0;
 	}
-	if (camera.x > LEVEL_WIDTH - camera.w) {
+	/*if (camera.x > LEVEL_WIDTH - camera.w) {
 		camera.x = LEVEL_WIDTH - camera.w;
-	}
+	}*/
 	if (camera.y > LEVEL_HEIGHT - camera.h) {
 		camera.y = LEVEL_HEIGHT - camera.h;
 	}

@@ -32,10 +32,10 @@ private:
 	SDL_Texture* retryBGTex = NULL;
 public:
 	Menu(SDL_Texture* buttonTex, SDL_Texture* mainMenuBGTex, SDL_Texture* retryBGTex);
-	void handleInput(SDL_Event& event, bool& p_gameRunning, Player& p_player, vector<Skeleton*>& p_skeletonList, float& p_camVel, SDL_Rect& p_cam);
+	void handleInput(SDL_Event& event, bool& p_gameRunning, Player& p_player, vector<Skeleton*>& p_skeletonList, vector<LevelPart>& LevelPartList, float& p_camVel, SDL_Rect& p_cam);
 	void renderMainMenu();
 	void renderRetryMenu();
-	void resetGame(Player& p_player, vector<Skeleton*>& p_skeletonList, float& p_camVel, SDL_Rect& p_cam);
+	void resetGame(Player& p_player, vector<Skeleton*>& p_skeletonList, vector<LevelPart>& LevelPartList, float& p_camVel, SDL_Rect& p_cam);
 	bool checkMouseHover(const int x, const int y);
 	bool isMenu() const { return menu; }
 };

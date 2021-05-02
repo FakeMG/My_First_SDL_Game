@@ -9,6 +9,7 @@
 #include "RenderWindow.h"
 #include "Player.h"
 #include "Entity.h"
+#include "LevelPart.h"
 class Player;
 using namespace std;
 
@@ -34,15 +35,16 @@ private:
 	float xVel = 0, yVel = 0;
 	int maxHealth = 3;
 	int groundSTT = 1; //số thứ tự của block đang đứng trên
+	int levelSTT = 1;
 	float distanceToPlayer;
 	SDL_Rect collision;
 public:
 	Skeleton(float p_x, float p_y, SDL_Texture* p_tex);
 
-	void update(Player& p_player, Tile* tile[], Mix_Chunk* p_sfx[], SDL_Rect& camera);
+	void update(Player& p_player, vector<LevelPart>& LevelPartList, Mix_Chunk* p_sfx[], SDL_Rect& camera);
 	void gravity();
-	void autoMovement(Tile* tile[]);
-	void moveToPlayer(Player& p_player, Tile* tile[]);
+	void autoMovement(vector<LevelPart>& LevelPartList);
+	void moveToPlayer(Player& p_player, vector<LevelPart>& LevelPartList);
 	bool isDead() { return dead; }
 	bool isAttacking();
 	void getHit(Player& p_player, Mix_Chunk* p_sfx[], SDL_Rect& camera);

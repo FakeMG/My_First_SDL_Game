@@ -10,6 +10,7 @@
 #include "Entity.h"
 #include "Bullet.h"
 #include "Skeleton.h"
+#include "LevelPart.h"
 class Skeleton;
 using namespace std;
 
@@ -33,9 +34,10 @@ private:
 	SDL_Rect deathClips[DEATH_ANIMATION_FRAMES];
 	int idleCounter = 0, walkCounter = 0, jumpCounter = 0, fallingCounter = 0, deathCounter = 0;
 
-	bool grounded = false, running = false, idling = true, jumping = false, falling = false, dead = false, beingHit = false, won = false;
+	bool grounded = false, running = false, idling = true, jumping = false, falling = false, dead = false, beingHit = false;
 	float xVel = 0, yVel = 0;
 	int groundSTT = 1; //số thứ tự của block đang đứng trên
+	int levelSTT = 1; //stt của map đang xét
 	SDL_Rect collision;
 	vector<Bullet*> bulletList;
 	Mix_Chunk* playerSFX[4];
@@ -49,12 +51,11 @@ public:
 	};
 
 	void handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]);
-	void update(Tile *tile[], vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera);
+	void update(vector<LevelPart>& LevelPartList, vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera);
 	void jump();
 	void gravity();
 	void getHit(vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera);
 	bool isDead() { return dead; }
-	bool Won() { return won; }
 	void knockBack();
 	void handleCamera(SDL_Rect& camera, float& camVel);
 	void render(SDL_Rect& p_camera);
@@ -63,7 +64,6 @@ public:
 		y = LEVEL_HEIGHT - TILE_HEIGHT * 4;
 		xVel = 0;
 		yVel = 0;
-		won = false;
 		dead = false;
 	}
 	void setBulletList(vector<Bullet*> bulletList) { this->bulletList = bulletList; }

@@ -22,7 +22,7 @@ Menu::Menu(SDL_Texture* buttonTex, SDL_Texture* mainMenuBGTex, SDL_Texture* retr
 	this->retryBGTex = retryBGTex;
 }
 
-void Menu::handleInput(SDL_Event& event, bool& p_gameRunning, Player& p_player, vector<Skeleton*>& p_skeletonList, float& p_camVel, SDL_Rect& p_cam) {
+void Menu::handleInput(SDL_Event& event, bool& p_gameRunning, Player& p_player, vector<Skeleton*>& p_skeletonList, vector<LevelPart>& LevelPartList, float& p_camVel, SDL_Rect& p_cam) {
 	switch (event.type) {
 	case SDL_MOUSEBUTTONDOWN:
 		if (event.button.button == SDL_BUTTON_LEFT) {
@@ -36,10 +36,10 @@ void Menu::handleInput(SDL_Event& event, bool& p_gameRunning, Player& p_player, 
 					p_gameRunning = false;
 				}
 			}
-			if (p_player.isDead() || p_player.Won()) {
+			if (p_player.isDead()) {
 				if (checkMouseHover(button1.x, button1.y)) {
 					pressed[2] = true;
-					resetGame(p_player, p_skeletonList, p_camVel, p_cam);
+					resetGame(p_player, p_skeletonList, LevelPartList, p_camVel, p_cam);
 				}
 				if (checkMouseHover(button2.x, button2.y)) {
 					pressed[3] = true;
@@ -58,7 +58,7 @@ void Menu::handleInput(SDL_Event& event, bool& p_gameRunning, Player& p_player, 
 			if (checkMouseHover(button2.x, button2.y) && !pressed[1]) selected[1] = true;
 			else selected[1] = false;
 		}
-		if (p_player.isDead() || p_player.Won()) {
+		if (p_player.isDead()) {
 			if (checkMouseHover(button1.x, button1.y) && !pressed[2]) selected[2] = true;
 			else selected[2] = false;
 			if (checkMouseHover(button2.x, button2.y) && !pressed[3]) selected[3] = true;
@@ -108,7 +108,7 @@ void Menu::renderRetryMenu() {
 	}
 }
 
-void Menu::resetGame(Player& p_player, vector<Skeleton*>& p_skeletonList, float& p_camVel, SDL_Rect& p_cam) {
+void Menu::resetGame(Player& p_player, vector<Skeleton*>& p_skeletonList, vector<LevelPart>& LevelPartList, float& p_camVel, SDL_Rect& p_cam) {
 	p_player.resetPlayer();
 	p_cam.x = 0;
 	p_cam.y = 0;
@@ -118,6 +118,7 @@ void Menu::resetGame(Player& p_player, vector<Skeleton*>& p_skeletonList, float&
 		p_skeletonList.at(i) = NULL;
 		p_skeletonList.erase(p_skeletonList.begin() + i);
 	}
+
 }
 
 bool Menu::checkMouseHover(const int p_x, const int p_y) {
