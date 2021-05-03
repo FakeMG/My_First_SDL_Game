@@ -22,6 +22,7 @@ public:
 	void render(SDL_Rect p_TileClips[], SDL_Rect& p_camera);
 
 	void setLevelX(LevelPart& p_level);
+	void setLevelX(float p_x);
 	void setTilesType(const char* p_path);
 	void setSkeletonPos(vector<float>& p_skeletonPos) { skeletonPos = p_skeletonPos; }
 

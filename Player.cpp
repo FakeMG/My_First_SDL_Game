@@ -4,7 +4,7 @@ Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 	collision.x = getX() + PLAYER_WIDTH;
 	collision.y = getY() + PLAYER_HEIGHT;
 	collision.w = PLAYER_WIDTH-12; //cho vừa với chân nhân vật
-	collision.h = PLAYER_HEIGHT-2; //cho nhân vật vừa trong 1 ô
+	collision.h = PLAYER_HEIGHT; //cho nhân vật vừa trong 1 ô
 
 
 	for (int i = 0; i < WALKING_ANIMATION_FRAMES; i++) {
@@ -113,7 +113,7 @@ void Player::update(vector<LevelPart>& LevelPartList, vector<Skeleton*> &skeleto
 	if (yVel > 0 && !grounded && !dead) falling = true;
 	else falling = false;
 
-	if (yVel <= 0 && !dead) jumping = true;
+	if (yVel <= 0 && !grounded && !dead) jumping = true;
 	else jumping = false;
 
 	if (!beingHit) {
@@ -143,9 +143,9 @@ void Player::update(vector<LevelPart>& LevelPartList, vector<Skeleton*> &skeleto
 		y = -PLAYER_HEIGHT;
 		collision.y = getY() + PLAYER_HEIGHT;
 	}
-	if (commonFunc::touchesWall(collision, LevelPartList, groundSTT, levelSTT)) {
+	if (commonFunc::touchesWall(collision, LevelPartList, grounded, groundSTT, levelSTT)) {
 		if (yVel > 0) {
-			y = LevelPartList.at(levelSTT).getTilesList().at(groundSTT)->getY() - 64 * 2 - 0.1 + 2;
+			y = LevelPartList.at(levelSTT).getTilesList().at(groundSTT)->getY() - 64 * 2;
 			if (falling) {
 				grounded = true;
 				Mix_PlayChannel(-1, p_sfx[landSFX], 0);
@@ -157,7 +157,8 @@ void Player::update(vector<LevelPart>& LevelPartList, vector<Skeleton*> &skeleto
 		}
 		collision.y = getY() + PLAYER_HEIGHT;
 	}
-	else grounded = false;
+
+	
 }
 
 void Player::jump() {
@@ -200,8 +201,10 @@ void Player::knockBack() {
 void Player::handleCamera(SDL_Rect& camera, float& camVel) {
 	//Camera tự di chuyển theo x
 	if(!isDead()) camera.x += camVel;
-	camVel += 0.003;
-	if (camVel > 4.5) camVel = 4.5;
+	float acc = 0.001;
+	if (camVel > 4) acc = 0.0003;
+	if (camVel > 5) acc = 0.00001;
+	camVel += acc;
 
 	if (getX() + PLAYER_WIDTH / 2 - camera.x >= SCREEN_WIDTH * 2 / 3) {
 		camera.x = (getX() + PLAYER_WIDTH / 2) - SCREEN_WIDTH * 2 / 3;

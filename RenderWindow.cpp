@@ -88,19 +88,19 @@ bool commonFunc::checkCollision(SDL_Rect a, SDL_Rect b) {
 	topB = b.y;
 	bottomB = b.y + b.h;
 
-	if (bottomA < topB) {
+	if (bottomA <= topB) {
 		return false;
 	}
 
-	if (topA > bottomB) {
+	if (topA >= bottomB) {
 		return false;
 	}
 
-	if (rightA < leftB) {
+	if (rightA <= leftB) {
 		return false;
 	}
 
-	if (leftA > rightB) {
+	if (leftA >= rightB) {
 		return false;
 	}
 
@@ -118,32 +118,89 @@ bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[]) {
 	return false;
 }
 
-bool commonFunc::touchesWall(SDL_Rect box, vector<LevelPart>& LevelPartList) {
+//bool commonFunc::touchesWall(SDL_Rect& box, vector<LevelPart>& LevelPartList) {
+//	for (int i = 0; i < LevelPartList.size(); i++) {
+//		for (int j = 0; j < LevelPartList.at(i).getTilesList().size(); ++j) {
+//			if ((LevelPartList.at(i).getTilesList().at(j)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(j)->getType() <= 84)) {
+//				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(j)->getCollision())) {
+//					return true;
+//				}
+//			}
+//		}
+//	}
+//	return false;
+//}
+
+bool commonFunc::touchesWall(SDL_Rect& box, vector<LevelPart>& LevelPartList) {
 	for (int i = 0; i < LevelPartList.size(); i++) {
-		for (int j = 0; j < LevelPartList.at(i).getTilesList().size(); ++j) {
-			if ((LevelPartList.at(i).getTilesList().at(j)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(j)->getType() <= 84)) {
-				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(j)->getCollision())) {
-					return true;
-				}
-			}
+		if (box.x > LevelPartList.at(i).getX() && box.x + box.w + 13 < LevelPartList.at(i).getX() + LEVEL_WIDTH && box.y >= 0 && box.y < LEVEL_HEIGHT - TILE_HEIGHT) {
+			int cot_left = (box.x - LevelPartList.at(i).getX()) / TILE_WIDTH;
+			int cot_rigth = cot_left + 1;
+			int dong_up = box.y / TILE_HEIGHT;
+			int dong_down = dong_up + 1;
+
+			int stt1 = dong_up * 21 + cot_rigth;
+			int stt2 = dong_down * 21 + cot_rigth;
+			int stt3 = dong_up * 21 + cot_left;
+			int stt4 = dong_down * 21 + cot_left;
+
+			if ((LevelPartList.at(i).getTilesList().at(stt1)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(stt1)->getType() <= 84))
+				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(stt1)->getCollision())) return true;
+
+			if ((LevelPartList.at(i).getTilesList().at(stt2)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(stt2)->getType() <= 84))
+				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(stt2)->getCollision())) return true;
+
+
+			if ((LevelPartList.at(i).getTilesList().at(stt3)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(stt3)->getType() <= 84))
+				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(stt3)->getCollision())) return true;
+
+			if ((LevelPartList.at(i).getTilesList().at(stt4)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(stt4)->getType() <= 84))
+				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(stt4)->getCollision())) return true;
 		}
 	}
 	return false;
 }
 
-bool commonFunc::touchesWall(SDL_Rect box, vector<LevelPart>& LevelPartList, int &groundSTT, int& levelSTT) {
+bool commonFunc::touchesWall(SDL_Rect& box, vector<LevelPart>& LevelPartList, bool& grounded, int& groundSTT, int& levelSTT) {
+	bool check = false;
 	for (int i = 0; i < LevelPartList.size(); i++) {
-		for (int j = 0; j < LevelPartList.at(i).getTilesList().size(); ++j) {
-			if ((LevelPartList.at(i).getTilesList().at(j)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(j)->getType() <= 84)) {
-				if (checkCollision(box, LevelPartList.at(i).getTilesList().at(j)->getCollision())) {
-					levelSTT = i;
-					groundSTT = j;
-					return true;
-				}
+		if (box.x + box.w + 12 >= LevelPartList.at(i).getX() && box.x <= LevelPartList.at(i).getX() + LEVEL_WIDTH && box.y >= 0 && box.y < LEVEL_HEIGHT - TILE_HEIGHT) {
+			int cot_left = (box.x - LevelPartList.at(i).getX()) / TILE_WIDTH;
+			int cot_rigth = cot_left + 1;
+			int dong_up = box.y / TILE_HEIGHT;
+			int dong_down = dong_up + 1;
+
+			int stt1 = dong_up * 21 + cot_rigth;
+			int stt2 = dong_down * 21 + cot_rigth;
+			int stt3 = dong_up * 21 + cot_left;
+			int stt4 = dong_down * 21 + cot_left;
+			
+			if (box.x <= LevelPartList.at(i).getX() && box.x + box.w + 12 >= LevelPartList.at(i).getX() || box.x <= LevelPartList.at(i).getX() + LEVEL_WIDTH && box.x + box.w + 12 >= LevelPartList.at(i).getX() + LEVEL_WIDTH) {
+				grounded = false;
 			}
+			else {
+				if ((LevelPartList.at(i).getTilesList().at(stt1)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(stt1)->getType() <= 84))
+					if (checkCollision(box, LevelPartList.at(i).getTilesList().at(stt1)->getCollision())) check = true;
+
+				if ((LevelPartList.at(i).getTilesList().at(stt2)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(stt2)->getType() <= 84))
+					if (checkCollision(box, LevelPartList.at(i).getTilesList().at(stt2)->getCollision())) check = true;
+
+
+				if ((LevelPartList.at(i).getTilesList().at(stt3)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(stt3)->getType() <= 84))
+					if (checkCollision(box, LevelPartList.at(i).getTilesList().at(stt3)->getCollision())) check = true;
+
+				if ((LevelPartList.at(i).getTilesList().at(stt4)->getType() >= 0) && (LevelPartList.at(i).getTilesList().at(stt4)->getType() <= 84))
+					if (checkCollision(box, LevelPartList.at(i).getTilesList().at(stt4)->getCollision())) check = true;
+
+				if ((LevelPartList.at(i).getTilesList().at(stt2)->getType() > 84) && (LevelPartList.at(i).getTilesList().at(stt4)->getType() > 84)) grounded = false;
+				if ((LevelPartList.at(i).getTilesList().at(stt4)->getType() > 84) && (LevelPartList.at(i).getTilesList().at(stt2)->getType() <= 84) && box.x + box.w <= LevelPartList.at(i).getTilesList().at(stt2)->getX()) grounded = false;
+			}
+				
+				groundSTT = stt4;
+				levelSTT = i;
 		}
 	}
-	return false;
+	return check;
 }
 
 //Load font

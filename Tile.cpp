@@ -17,7 +17,7 @@ SDL_Rect Tile::getCollision() {
 	return collision;
 }
 
-void Tile::setX() {
-	 x += TOTAL_LEVEL_PART *LEVEL_WIDTH;
+void Tile::setX(int p_x) {
+	 x = p_x;
 	 collision.x = getX();
 }

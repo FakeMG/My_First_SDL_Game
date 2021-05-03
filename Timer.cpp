@@ -21,14 +21,16 @@ LTimer::LTimer() {
 
 void LTimer::start() {
     //Start the timer
-    mStarted = true;
+    if (!mStarted) {
+        mStarted = true;
 
-    //Unpause the timer
-    mPaused = false;
+        //Unpause the timer
+        mPaused = false;
 
-    //Get the current clock time
-    mStartTicks = SDL_GetTicks();
-    mPausedTicks = 0;
+        //Get the current clock time
+        mStartTicks = SDL_GetTicks();
+        mPausedTicks = 0;
+    }
 }
 
 void LTimer::stop() {

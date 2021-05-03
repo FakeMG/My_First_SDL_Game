@@ -9,6 +9,7 @@
 #include "RenderWindow.h"
 #include "Player.h"
 #include "Entity.h"
+#include "Timer.h"
 using namespace std;
 
 class Menu {
@@ -23,7 +24,7 @@ private:
 	SDL_Point button1 = { SCREEN_WIDTH/2 - BUTTON_WIDTH/2, SCREEN_HEIGHT/2 };
 	SDL_Point button2 = { SCREEN_WIDTH / 2 - BUTTON_WIDTH / 2, SCREEN_HEIGHT/2 + BUTTON_HEIGHT + 32 };
 
-	bool menu = true, retry = false;
+	bool menu = true, retry = false, paused = false, reset = false;
 	bool selected[4] = { false };
 	bool pressed[4] = { false };
 
@@ -32,10 +33,12 @@ private:
 	SDL_Texture* retryBGTex = NULL;
 public:
 	Menu(SDL_Texture* buttonTex, SDL_Texture* mainMenuBGTex, SDL_Texture* retryBGTex);
-	void handleInput(SDL_Event& event, bool& p_gameRunning, Player& p_player, vector<Skeleton*>& p_skeletonList, vector<LevelPart>& LevelPartList, float& p_camVel, SDL_Rect& p_cam);
+	void handleInput(SDL_Event& event, bool& p_gameRunning, Player& p_player);
 	void renderMainMenu();
 	void renderRetryMenu();
-	void resetGame(Player& p_player, vector<Skeleton*>& p_skeletonList, vector<LevelPart>& LevelPartList, float& p_camVel, SDL_Rect& p_cam);
 	bool checkMouseHover(const int x, const int y);
 	bool isMenu() const { return menu; }
+	bool isPaused() const { return paused; }
+	bool need_reseting() const { return reset; }
+	void set_reset(bool p_reset) { reset = p_reset; }
 };

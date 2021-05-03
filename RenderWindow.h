@@ -30,7 +30,7 @@ const int LEVEL_HEIGHT = 1024;
 const int TILE_WIDTH = 64;
 const int TILE_HEIGHT = 64;
 const int TOTAL_LEVEL_PART = 3;
-const int TOTAL_MAP = 6;
+const int TOTAL_MAP = 15;
 const int TOTAL_TILES = 336;
 const int TOTAL_TILE_SPRITES = 187;
 
@@ -63,8 +63,8 @@ namespace commonFunc {
 
 	bool checkCollision(SDL_Rect a, SDL_Rect b);
 	bool touchesWall(SDL_Rect box, Tile* tiles[]);
-	bool touchesWall(SDL_Rect box, vector<LevelPart>& LevelPartList);
-	bool touchesWall(SDL_Rect box, vector<LevelPart>& LevelPartList, int& groundSTT, int& levelSTT);
+	bool touchesWall(SDL_Rect& box, vector<LevelPart>& LevelPartList);
+	bool touchesWall(SDL_Rect& box, vector<LevelPart>& LevelPartList,bool& grounded, int& groundSTT, int& levelSTT);
 
 	//Font
 	bool loadFont(const char* filePath);

@@ -69,7 +69,18 @@ void LevelPart::render(SDL_Rect p_TileClips[], SDL_Rect& p_camera) {
 void LevelPart::setLevelX(LevelPart& p_level) {
     x = p_level.getX() + LEVEL_WIDTH;
     for (int i = 0; i < tilesList.size(); i++) {
-        tilesList.at(i)->setX();
+        int dong = i / 21;
+        int cot = (i - dong * 21) * TILE_WIDTH + getX();
+        tilesList.at(i)->setX(cot);
+    }
+}
+
+void LevelPart::setLevelX(float p_x) {
+    x = p_x;
+    for (int i = 0; i < tilesList.size(); i++) {
+        int dong = i / 21;
+        int cot = (i - dong*21) * TILE_WIDTH + getX();
+        tilesList.at(i)->setX(cot);
     }
 }
 

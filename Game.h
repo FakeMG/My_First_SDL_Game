@@ -35,9 +35,13 @@ private:
 	Mix_Chunk* playerSFX[4] = { NULL };
 	Mix_Chunk* skeletonSFX[2] = { NULL };
 
-	//FPScounter
+	//Time
 	LTimer fpsTimer;
 	stringstream timeText;
+	stringstream scoreText;
+	stringstream highscoreText;
+	int score = 0;
+	int highscore = 0;
 	int countedFrames = 0;
 
 	SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
@@ -59,6 +63,7 @@ public:
 	bool init();
 	bool loadMedia();
 	void FPSCounter();
+	void renderScore();
 	bool createMap();
 	bool createLevel();
 	bool createSkeleton();
@@ -66,13 +71,16 @@ public:
 	bool createMenu();
 	void start_ExplosionSFX();
 	void playMusic();
+	void pauseMusicTime();
 	void render_update_LevelPart();
 	void render_update_bullet();
 	void render_update_player();
 	void render_update_skeleton();
 	void render_update_explosion();
+	void update_hight_score();
 	void render_update_Game();
 	void render_mainMenu();
+	void resetGame();
 	void handleGameInput(SDL_Event& event);
 	bool isRunning() { return gameRunning; }
 	vector<Menu> getMenuList() { return menuList; }

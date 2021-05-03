@@ -3,7 +3,7 @@
 Skeleton::Skeleton(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_tex) {
 	collision.x = getX() + SKELETON_WIDTH;
 	collision.y = getY() + SKELETON_HEIGHT;
-	collision.w = SKELETON_WIDTH;
+	collision.w = SKELETON_WIDTH-12;
 	collision.h = SKELETON_HEIGHT-2;
 
 	for (int i = 0; i < WALKING_ANIMATION_FRAMES; i++) {
@@ -69,11 +69,6 @@ void Skeleton::update(Player& p_player, vector<LevelPart>& LevelPartList, Mix_Ch
 			collision.x = getX() + SKELETON_WIDTH;
 			xVel *= -1;
 		}
-		/*if (getX() + 2 * SKELETON_HEIGHT > LEVEL_WIDTH) {
-			x = LEVEL_WIDTH - 2 * SKELETON_HEIGHT;
-			collision.x = getX() + SKELETON_WIDTH;
-			xVel *= -1;
-		}*/
 		if (commonFunc::touchesWall(collision, LevelPartList)) {
 			x -= xVel;
 			collision.x = getX() + SKELETON_WIDTH;
@@ -88,9 +83,9 @@ void Skeleton::update(Player& p_player, vector<LevelPart>& LevelPartList, Mix_Ch
 		y = -SKELETON_HEIGHT;
 		collision.y = getY() + SKELETON_HEIGHT;
 	}
-	if (commonFunc::touchesWall(collision, LevelPartList, groundSTT, levelSTT)) {
+	if (commonFunc::touchesWall(collision, LevelPartList, grounded, groundSTT, levelSTT)) {
 		if (yVel > 0) {
-			y = LevelPartList.at(levelSTT).getTilesList().at(groundSTT)->getY() - 64 * 2 - 0.1 + 2;
+			y = LevelPartList.at(levelSTT).getTilesList().at(groundSTT)->getY() - 64 * 2;
 			if (falling) {
 				grounded = true;
 			}
@@ -101,7 +96,6 @@ void Skeleton::update(Player& p_player, vector<LevelPart>& LevelPartList, Mix_Ch
 		}
 		collision.y = getY() + SKELETON_HEIGHT;
 	}
-	else grounded = false;
 	
 }
 

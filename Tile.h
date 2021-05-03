@@ -17,7 +17,7 @@ private:
 public:
 	Tile(float p_x, float p_y, SDL_Texture* p_tex, int p_type);
 	int getType();
-	void setX();
+	void setX(int p_x);
 	void setType(int p_type) { tileType = p_type; }
 	SDL_Rect getCollision();
 };

@@ -34,7 +34,7 @@ private:
 	SDL_Rect deathClips[DEATH_ANIMATION_FRAMES];
 	int idleCounter = 0, walkCounter = 0, jumpCounter = 0, fallingCounter = 0, deathCounter = 0;
 
-	bool grounded = false, running = false, idling = true, jumping = false, falling = false, dead = false, beingHit = false;
+	bool grounded = false, running = false, idling = true, jumping = false, falling = true, dead = false, beingHit = false;
 	float xVel = 0, yVel = 0;
 	int groundSTT = 1; //số thứ tự của block đang đứng trên
 	int levelSTT = 1; //stt của map đang xét
@@ -61,10 +61,11 @@ public:
 	void render(SDL_Rect& p_camera);
 	void resetPlayer() {
 		x = 64 * 3; 
-		y = LEVEL_HEIGHT - TILE_HEIGHT * 4;
+		y = LEVEL_HEIGHT - TILE_HEIGHT * 5;
 		xVel = 0;
 		yVel = 0;
 		dead = false;
+		flipType = SDL_FLIP_NONE;
 	}
 	void setBulletList(vector<Bullet*> bulletList) { this->bulletList = bulletList; }
 
