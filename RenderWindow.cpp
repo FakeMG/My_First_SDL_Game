@@ -107,17 +107,6 @@ bool commonFunc::checkCollision(SDL_Rect a, SDL_Rect b) {
 	return true;
 }
 
-bool commonFunc::touchesWall(SDL_Rect box, Tile* tiles[]) {
-	for (int i = 0; i < TOTAL_TILES; ++i) {
-		if ((tiles[i]->getType() >= 0) && (tiles[i]->getType() <= 84)) {
-			if (checkCollision(box, tiles[i]->getCollision())) {
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
 //bool commonFunc::touchesWall(SDL_Rect& box, vector<LevelPart>& LevelPartList) {
 //	for (int i = 0; i < LevelPartList.size(); i++) {
 //		for (int j = 0; j < LevelPartList.at(i).getTilesList().size(); ++j) {
@@ -241,7 +230,6 @@ void commonFunc::Color() {
 }
 
 
-//clear renderer cũ
 void commonFunc::clearRenderer() {
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 	SDL_RenderClear(renderer);
@@ -251,7 +239,6 @@ void commonFunc::renderPresent() {
 	SDL_RenderPresent(renderer);
 }
 
-//Giải phóng bộ nhớ
 void commonFunc::cleanUp() {
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);

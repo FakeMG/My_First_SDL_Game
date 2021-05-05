@@ -4,7 +4,7 @@ Player::Player(float p_x, float p_y, SDL_Texture* p_tex) : Entity(p_x, p_y, p_te
 	collision.x = getX() + PLAYER_WIDTH;
 	collision.y = getY() + PLAYER_HEIGHT;
 	collision.w = PLAYER_WIDTH-12; //cho vừa với chân nhân vật
-	collision.h = PLAYER_HEIGHT; //cho nhân vật vừa trong 1 ô
+	collision.h = PLAYER_HEIGHT;
 
 
 	for (int i = 0; i < WALKING_ANIMATION_FRAMES; i++) {
@@ -101,7 +101,6 @@ void Player::handleInput(SDL_Event &events, Mix_Chunk* p_sfx[]) {
 void Player::update(vector<LevelPart>& LevelPartList, vector<Skeleton*> &skeletonList, Mix_Chunk* p_sfx[], SDL_Rect& camera) {
 	gravity();
 	if(!dead) getHit(skeletonList, p_sfx, camera);
-	//knockBack();
 
 	// set trạng thái Player
 	if (xVel == 0 && grounded && !dead) idling = true;
@@ -218,9 +217,6 @@ void Player::handleCamera(SDL_Rect& camera, float& camVel) {
 	if (camera.y < 0) {
 		camera.y = 0;
 	}
-	/*if (camera.x > LEVEL_WIDTH - camera.w) {
-		camera.x = LEVEL_WIDTH - camera.w;
-	}*/
 	if (camera.y > LEVEL_HEIGHT - camera.h) {
 		camera.y = LEVEL_HEIGHT - camera.h;
 	}

@@ -104,6 +104,7 @@ void Game::renderScore() {
     scoreText.str("");
     scoreText << "Score: " << score << "m";
     SDL_Color whiteColor = { 255,255,255,255 };
+    SDL_Color yellowColor = { 252,226,5,255 };
 
     ifstream readFile;
     readFile.open("res/highscore.txt");
@@ -112,10 +113,10 @@ void Game::renderScore() {
     highscoreText.str("");
     highscoreText << "High Score: " << highscore << "m";
 
-    SDL_Texture* scoreTex = commonFunc::createText(scoreText.str().c_str(), whiteColor);
+    SDL_Texture* scoreTex = commonFunc::createText(scoreText.str().c_str(), yellowColor);
     SDL_Texture* highscoreTex = commonFunc::createText(highscoreText.str().c_str(), whiteColor);
-    Entity current_score(1110, 30, scoreTex);
-    Entity high_score(1110, 0, highscoreTex);
+    Entity current_score(1100, 30, scoreTex);
+    Entity high_score(1100, 0, highscoreTex);
     commonFunc::renderTexture(current_score);
     commonFunc::renderTexture(high_score);
 }
