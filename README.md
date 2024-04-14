@@ -1,4 +1,4 @@
-# MyGame
+# FakeMG-Game
 - Các thư viện SDL: SDL.h, SDL_image.h, SDL_mixer.h, SDL_TTF.h
 - Code tham khảo: 
 	+ Toàn bộ 2 file Time.h và Time.cpp: https://lazyfoo.net/tutorials/SDL/23_advanced_timers/index.php
