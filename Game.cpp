@@ -119,6 +119,8 @@ void Game::renderScore() {
     Entity high_score(1100, 0, highscoreTex);
     commonFunc::renderTexture(current_score);
     commonFunc::renderTexture(high_score);
+    SDL_DestroyTexture(scoreTex);
+    SDL_DestroyTexture(highscoreTex);
 }
 
 bool Game::createMap() {
