@@ -119,6 +119,7 @@ void Game::renderScore() {
     Entity high_score(1100, 0, highscoreTex);
     commonFunc::renderTexture(current_score);
     commonFunc::renderTexture(high_score);
+    //fix memory leaks
     SDL_DestroyTexture(scoreTex);
     SDL_DestroyTexture(highscoreTex);
 }
